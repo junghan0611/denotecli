@@ -1,0 +1,643 @@
+#+title:      Denote-Org Skills TODO
+#+date:       [2025-10-21 Tue 11:58]
+#+filetags:   :project:todo:
+#+startup:    overview
+
+* Denote-Org Skills 0.1 Release Roadmap
+
+** DONE Project Setup
+CLOSED: [2025-10-21 Tue 11:56]
+- [X] Create repository (~/repos/gh/orgmode-skills)
+- [X] README.md (English)
+- [X] README-KO.md (Korean)
+- [X] LICENSE (Apache 2.0)
+- [X] .gitignore
+- [X] Git init and first commit
+- [X] Git remote add origin
+- [X] Development log (docs/20251021T113500--*.org)
+- [X] Opus 4.1 feedback integration
+
+** TODO Phase 1: Core Documentation [0/4]
+SCHEDULED: <2025-10-21 Tue>
+
+*** TODO SKILL.md - Main guide for Claude
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Based on Opus 4.1 feedback, include:
+- When to use this skill (트리거 명확히)
+  - Denote PKM systems
+  - 3,000+ org files
+  - Knowledge graph navigation
+  - Literate programming
+
+- What this skill does
+  - Parse Denote filenames
+  - Resolve [[denote:ID]] links
+  - Build knowledge graph
+  - Execute code blocks
+  - Silo management
+
+- How to use effectively
+  - Quick start examples
+  - Python script usage
+  - Common workflows
+
+- Common pitfalls
+  - Edge cases (ID collision, circular refs, encoding...)
+  - Performance considerations
+  - Silo boundaries
+
+Reference: PDF/XLSX SKILL.md structure
+
+*** TODO denote-core.md - Denote specification
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Content:
+- File naming: YYYYMMDDTHHMMSS--title__tags.org
+- Frontmatter: #+title, #+date, #+filetags, #+identifier
+- Links: [[denote:TIMESTAMP]]
+- Silo concept
+- Real examples from 3,000+ files
+
+*** TODO denote-silo.md - Silo management guide
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Content:
+- What is silo? (~/org/ vs ~/claude-memory/ vs ~/repos/*/docs/)
+- Cross-silo links
+- Priority resolution
+- Path handling (os.path.expanduser)
+
+*** TODO orgmode-base.md - Org-mode foundation
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Content:
+- Headings, properties, timestamps
+- Code blocks (#+begin_src ... #+end_src)
+- Tables
+- Links (file:, id:, denote:)
+- Export basics
+
+** TODO Phase 2: Denote Core Scripts [0/5]
+SCHEDULED: <2025-10-22 Wed>
+
+*** TODO scripts/denote_parser.py - File name and frontmatter parsing
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Functions:
+#+begin_src python
+def parse_denote_filename(filename: str) -> dict:
+    """
+    Parse: 20251021T105353--title__tag1_tag2.org
+    Returns: {
+        'timestamp': '20251021T105353',
+        'title': 'title',
+        'tags': ['tag1', 'tag2'],
+        'extension': 'org'
+    }
+
+    Edge cases:
+    - 한글 title handling
+    - No tags (filename without __)
+    - Multiple hyphens in title
+    """
+
+def parse_denote_frontmatter(content: str) -> dict:
+    """
+    Parse org-mode frontmatter:
+    #+title:, #+date:, #+filetags:, #+identifier:
+    """
+#+end_src
+
+Implementation notes:
+- Use os.path.expanduser() for paths
+- Handle encoding (UTF-8)
+- Validate timestamp format
+- Test with 100+ real filenames
+
+*** TODO scripts/denote_finder.py - File search with caching
+:PROPERTIES:
+:EFFORT: 2.5h
+:END:
+
+Functions:
+#+begin_src python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def build_file_index(silo_path: str) -> dict:
+    """Build index of all Denote files (cached)"""
+
+def find_denote_file(identifier: str, silos: list) -> str:
+    """Find file by timestamp ID"""
+
+def find_by_tags(tags: list, silo: str) -> list:
+    """Find files by tags"""
+
+def find_by_date_range(pattern: str, silo: str) -> list:
+    """Find files by date pattern (202510*)"""
+
+def find_files_generator(pattern: str, silo: str):
+    """Memory-efficient streaming search"""
+    for file in matching_files:
+        yield file
+#+end_src
+
+Implementation notes:
+- Generator for large result sets
+- lru_cache for index
+- Support multiple silos
+- Pattern matching (glob, regex)
+
+*** TODO scripts/denote_links.py - Link resolution with fallback
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Functions:
+#+begin_src python
+def resolve_denote_link(link_id: str, silos: list) -> str:
+    """
+    Resolve [[denote:20251021T105353]] to file path
+
+    Try:
+    1. Exact match (full timestamp)
+    2. Fallback: partial match (first 8 chars)
+    3. Raise NotFoundError with suggestions
+    """
+
+def extract_denote_links(org_content: str) -> list:
+    """Extract all [[denote:ID]] links from org file"""
+
+def validate_links(filepath: str, silos: list) -> dict:
+    """Check for broken links, return status"""
+#+end_src
+
+Implementation notes:
+- Error recovery (Opus feedback)
+- Cross-silo links
+- Backlinks tracking
+
+*** TODO scripts/denote_silo.py - Silo management
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Functions:
+#+begin_src python
+def find_in_silos(identifier: str, silos: list, priority: bool = True) -> str:
+    """
+    Search in multiple silos
+    priority=True: return first match
+    priority=False: return all matches
+    """
+
+def list_silos(base_paths: list) -> list:
+    """Discover all Denote silos"""
+
+def get_silo_stats(silo_path: str) -> dict:
+    """Get statistics: file count, tags, date range"""
+#+end_src
+
+Implementation notes:
+- os.path.expanduser()
+- Symlink resolution
+- Priority handling
+
+*** TODO scripts/requirements.txt - Python dependencies
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+#+begin_src text
+orgparse>=0.3.0
+pypandoc>=1.11
+pyyaml>=6.0
+#+end_src
+
+** TODO Phase 3: Knowledge Graph [0/2]
+SCHEDULED: <2025-10-23 Thu>
+
+*** TODO scripts/denote_graph.py - Graph builder with caching
+:PROPERTIES:
+:EFFORT: 3h
+:END:
+
+Functions:
+#+begin_src python
+from functools import lru_cache
+import networkx as nx
+
+@lru_cache(maxsize=32)
+def build_knowledge_graph(silo_path: str) -> nx.DiGraph:
+    """
+    Build directed graph:
+    - Nodes: Denote files
+    - Edges: [[denote:ID]] links
+    - Attributes: tags, title, date
+
+    Cached for performance
+    """
+
+def get_connected_nodes(identifier: str, hops: int = 2) -> list:
+    """Get connected files (N-hop neighbors)"""
+
+def detect_circular_refs(graph: nx.DiGraph) -> list:
+    """Detect circular references (Edge case!)"""
+
+def update_graph_incremental(graph: nx.DiGraph, changed_files: list):
+    """Incremental update (Opus suggestion)"""
+
+def export_graph_stats(graph: nx.DiGraph) -> dict:
+    """Export graph statistics (nodes, edges, clusters...)"""
+#+end_src
+
+Implementation notes:
+- Use networkx for graph operations
+- Detect cycles (circular references)
+- Incremental updates
+- Performance monitoring (>1s warning)
+
+*** TODO denote-knowledge-graph.md - Graph documentation
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Content:
+- Graph structure (nodes, edges)
+- Algorithms (BFS, DFS for traversal)
+- Circular reference handling
+- Performance benchmarks (3,000+ files)
+- Use cases (find related, clusters, orphans)
+
+** TODO Phase 4: Org-mode Features [0/3]
+SCHEDULED: <2025-10-24 Fri>
+
+*** TODO scripts/org_parser.py - Org structure parsing
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Functions:
+#+begin_src python
+import orgparse
+
+def parse_org_file(filepath: str) -> orgparse.OrgNode:
+    """Parse org file structure"""
+
+def extract_headings(node: orgparse.OrgNode, level: int = None) -> list:
+    """Extract headings (optionally by level)"""
+
+def extract_properties(node: orgparse.OrgNode) -> dict:
+    """Extract properties drawer"""
+
+def extract_timestamps(node: orgparse.OrgNode) -> list:
+    """Extract all timestamps"""
+
+def extract_code_blocks(filepath: str) -> list:
+    """Extract #+begin_src blocks with metadata"""
+#+end_src
+
+*** TODO scripts/org_execute.py - Code block execution (Emacs compatible)
+:PROPERTIES:
+:EFFORT: 2.5h
+:END:
+
+Functions:
+#+begin_src python
+def execute_org_blocks(filepath: str, block_names: list = None):
+    """
+    Execute code blocks (org-babel compatible)
+
+    Support:
+    - :tangle option (file path)
+    - :results option (silent/output/value)
+    - Named blocks (#+name:)
+    - Languages (bash, python, ...)
+
+    Safety:
+    - Preserve org structure
+    - Update #+RESULTS blocks
+    - Error handling
+    """
+
+def tangle_org_file(filepath: str, output_dir: str = None):
+    """Extract code blocks to files (:tangle)"""
+#+end_src
+
+Implementation notes:
+- Org-babel :results handling (Opus feedback)
+- Structure preservation (critical!)
+- Timeout handling
+
+*** TODO scripts/org_export.py - Multi-format export
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Functions:
+#+begin_src python
+import pypandoc
+
+def export_to_markdown(org_file: str, output: str):
+    """org → markdown (preserve Denote frontmatter)"""
+
+def export_to_html(org_file: str, output: str):
+    """org → HTML"""
+
+def export_to_pdf(org_file: str, output: str):
+    """org → PDF (requires LaTeX)"""
+#+end_src
+
+** TODO Phase 5: Testing & Examples [0/4]
+SCHEDULED: <2025-10-25 Sat>
+
+*** TODO tests/ - Test dataset structure
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Create test files:
+#+begin_example
+tests/
+├── small/    # 10 files (fast tests)
+│   ├── 20251021T100000--test-file-1__test.org
+│   ├── 20251021T100100--test-file-2__test_denote.org
+│   └── ...
+├── medium/   # 100 files (feature tests)
+└── large/    # 1000+ files (performance tests)
+#+end_example
+
+Include edge cases:
+- ID collision (same second)
+- Circular references
+- Cross-silo links
+- 한글 titles
+- Broken links
+
+*** TODO examples/ - Usage examples
+:PROPERTIES:
+:EFFORT: 1.5h
+:END:
+
+Create:
+- examples/basic.org (basic Denote file)
+- examples/literate.org (code blocks with :tangle)
+- examples/knowledge-graph.org (multiple links)
+
+*** TODO Run tests with 3,000+ real files
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Test with actual ~/org/ directory:
+- File finding speed
+- Graph building time
+- Link resolution accuracy
+- Memory usage
+
+*** TODO Performance benchmarks
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Measure:
+- denote_finder.py: <100ms for single file
+- denote_graph.py: <10s for 3,000 files (cached: <1s)
+- denote_links.py: <50ms per link
+
+** TODO Phase 6: 0.1 Release [0/5]
+SCHEDULED: <2025-10-26 Sun>
+
+*** TODO Complete SKILL.md with all sections
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Final review:
+- All "When/What/How/Pitfalls" sections
+- Working code examples
+- Cross-references to other docs
+
+*** TODO Update README with installation instructions
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+Add:
+- Tested installation steps
+- Dependencies verification
+- Quick start that actually works
+
+*** TODO Create CHANGELOG.md
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+Document:
+- v0.1 initial release
+- Features implemented
+- Known limitations
+
+*** TODO Final Git commit and tag
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+#+begin_src bash
+git add .
+git commit -m "Release 0.1: Core Denote-Org Skills"
+git tag -a v0.1 -m "Version 0.1: Denote core + org-mode base"
+git push -u origin main
+git push origin v0.1
+#+end_src
+
+*** TODO Convert repository to Public
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+GitHub settings:
+- Repository → Settings → General
+- Danger Zone → Change visibility → Public
+- Confirm
+
+** TODO Phase 7: Community Outreach [0/4]
+
+*** TODO Submit PR to awesome-claude-skills
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Repository: https://github.com/travisvn/awesome-claude-skills
+
+Add to Community Skills section:
+#+begin_src markdown
+### Knowledge Management
+
+- **[denote-org](https://github.com/junghan0611/org-mode-skills)** -
+  Comprehensive Denote PKM system support with org-mode foundation.
+  Validated with 3,000+ files. Features knowledge graph navigation,
+  literate programming, and multi-silo management.
+#+end_src
+
+*** TODO Share on communities
+:PROPERTIES:
+:EFFORT: 1h
+:END:
+
+Platforms:
+- [ ] Reddit r/emacs
+- [ ] Reddit r/orgmode
+- [ ] Hacker News
+- [ ] Anthropic Discord/Forum
+- [ ] Protesilaos Stavrou (Denote creator) - mention on Mastodon?
+
+*** TODO Create announcement blog post
+:PROPERTIES:
+:EFFORT: 2h
+:END:
+
+Write for notes.junghanacs.com:
+- Title: "Denote-Org Skills: Life Sciences Paradigm for Life Everything"
+- Content: Project vision, technical details, 9-layer context
+- Publish as org → markdown
+
+*** TODO AIONS Clubs announcement
+:PROPERTIES:
+:EFFORT: 0.5h
+:END:
+
+Share with AIONS community:
+- Project overview
+- Life Sciences → Life Everything vision
+- Contribution opportunity
+
+* Implementation Notes
+
+** Critical Requirements (from Opus 4.1)
+
+*** File Path Handling
+#+begin_src python
+import os
+# Always use
+silo = os.path.expanduser("~/org/")
+#+end_src
+
+*** Caching Strategy
+#+begin_src python
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def expensive_operation():
+    pass
+#+end_src
+
+*** Error Recovery
+#+begin_src python
+def resolve_with_fallback(identifier):
+    try:
+        return exact_match(identifier)
+    except NotFoundError:
+        return partial_match(identifier[:8])
+#+end_src
+
+*** Performance Monitoring
+#+begin_src python
+def measure_performance(func):
+    # Log if > 1 second
+    pass
+#+end_src
+
+** Edge Cases to Handle
+
+1. [ ] Denote ID collision (same second)
+2. [ ] Circular references in graph
+3. [ ] Cross-silo links
+4. [ ] 한글 encoding in filenames
+5. [ ] Symlink resolution
+
+** Dependencies
+
+*** Python packages
+- orgparse>=0.3.0
+- pypandoc>=1.11
+- pyyaml>=6.0
+- networkx>=3.0 (for knowledge graph)
+
+*** System
+- Pandoc (for export)
+- Python 3.8+
+
+* Progress Tracking
+
+** Week 1 (2025-10-21 ~ 2025-10-27)
+- [X] Day 1 (Mon): Project setup, README, Git init
+- [ ] Day 2 (Tue): SKILL.md, denote-core.md
+- [ ] Day 3 (Wed): Core scripts (parser, finder)
+- [ ] Day 4 (Thu): Links, silo, graph
+- [ ] Day 5 (Fri): Org-mode features
+- [ ] Day 6 (Sat): Testing
+- [ ] Day 7 (Sun): 0.1 Release
+
+** Metrics
+
+*** Current Status (2025-10-21)
+- Files: 5 (README×2, LICENSE, .gitignore, docs)
+- Commits: 2
+- Lines: 1,677 (docs: 829, README: 743, LICENSE: 202)
+- Status: 🟡 Development
+
+*** Target for 0.1
+- Files: 15+ (docs, scripts, examples)
+- Scripts: 7 Python files
+- Tests: 3 levels (small/medium/large)
+- Documentation: Complete
+- Status: 🟢 Public Release
+
+* References
+
+** Anthropic Resources
+- [[https://github.com/anthropics/skills][Official Skills Repository]]
+- [[https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills][Agent Skills Engineering Blog]]
+- document-skills/pdf/SKILL.md (8 scripts example)
+- document-skills/xlsx/SKILL.md (CRITICAL rules example)
+
+** Denote Resources
+- [[https://protesilaos.com/emacs/denote][Denote by Protesilaos Stavrou]]
+- [[https://orgmode.org/][Org-mode]]
+
+** Related Projects
+- [[file:~/repos/gh/claude-config/README.md][claude-config]]
+- [[file:~/repos/gh/memex-kb/README.md][memex-kb]]
+- [[file:~/repos/gh/embedding-config/README.md][embedding-config]]
+
+* Notes
+
+** Opus 4.1 Feedback Summary
+"Life Sciences → Life Everything 패러다임 확장은
+Anthropic Skills의 본질을 잘 이해한 접근입니다."
+
+Key insights:
+- SKILL.md structure is critical
+- Performance optimization for 3,000+ files
+- Edge case handling is essential
+- Test dataset structure needed
+
+** Project Philosophy
+Skills = Onboarding guide for domain expertise
+NOT a converter, AN operational system
+Validated with real-world 3,000+ files PKM
+
+---
+Last updated: [2025-10-21 Tue 11:58]
