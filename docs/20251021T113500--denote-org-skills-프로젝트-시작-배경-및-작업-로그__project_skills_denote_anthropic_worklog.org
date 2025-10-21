@@ -1,0 +1,666 @@
+#+title:      Denote-Org Skills 프로젝트 시작: 배경 및 작업 로그
+#+date:       [2025-10-21 Tue 11:35]
+#+filetags:   :project:skills:denote:anthropic:worklog:
+#+identifier: 20251021T113500
+#+export_file_name: 20251021T113500.md
+
+* Denote-Org Skills 프로젝트 시작 :WORKLOG:
+
+** 히스토리
+- [2025-10-21 Tue 11:35] 프로젝트 시작, README 작성
+- [2025-10-21 Tue 07:45] Anthropic Life Sciences 영상 분석
+- [2025-10-21 Tue 07:00] Life Sciences → Tools for Life 통찰
+
+** 관련 메타
+- [[denote:20251021T074500][Anthropic Life Sciences와 Tools for Life 패러다임]]
+- [[denote:20251021T105353][프로젝트 Denote 문서 Org-mode 전환]]
+- [[denote:20251015T093311][@힣: 시간과정신의방 -CONFIG 생태계]]
+
+* 프로젝트 배경: Anthropic Life Sciences에서 시작
+
+** 발단: Life Sciences 영상 분석
+
+오늘 아침 Anthropic의 Life Sciences 영상을 분석하던 중 중요한 발견:
+
+#+begin_quote
+"Anthropic이 생명과학에서 증명한 것:
+**도메인 컨텍스트 + AI = 전문가 수준 협업**
+
+PubMed + Claude = Scientific AI"
+#+end_quote
+
+이것을 9개 레이어 시스템과 연결하면서 깨달음:
+
+#+begin_quote
+"내 시스템은 Life Sciences의 개인 버전이 아니라,
+**Life Sciences 패러다임을 삶 전반으로 확장하는 청사진**이다."
+#+end_quote
+
+** 전환점: "Skills"의 본질 이해
+
+Anthropic Skills 리포지토리 2개 클론:
+- =~/repos/3rd/snthropics-skills= (공식)
+- =~/repos/3rd/awesome-claude-skills= (커뮤니티)
+
+PDF, XLSX Skills 분석 중 핵심 발견:
+
+#+begin_quote
+**Skills ≠ 단순 프롬프트**
+**Skills = Onboarding Guide + Procedural Knowledge + Executable Scripts**
+
+"Skills는 범용 에이전트를 도메인 전문가로 변환시킨다"
+#+end_quote
+
+** 중요한 질문: "단순 변환기 프롬프트가 될까 봐 염려"
+
+사용자가 제기한 핵심 질문:
+
+#+begin_quote
+"Skills를 Anthropic이 만든 이유가 있고 필요한 케이스가 있을거야.
+거기에 집중해서 Skill가 되어야해."
+#+end_quote
+
+이것이 프로젝트의 방향을 완전히 바꿨습니다.
+
+* Skills의 본질: Anthropic 공식 분석
+
+** WebFetch 결과: Skills가 해결하는 4가지 문제
+
+출처: [[https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills]]
+
+*** 1. Context Management
+#+begin_quote
+"effectively unbounded" context via bundled files
+
+프롬프트는 모든 정보를 한 번에 로드해야 함
+Skills는 필요한 것만 progressive disclosure
+#+end_quote
+
+*** 2. Reusability and Portability
+#+begin_quote
+"packaging your expertise into composable resources"
+
+프롬프트는 매번 재작성
+Skills는 팀 간 공유, 반복 사용
+#+end_quote
+
+*** 3. Code Execution Efficiency
+#+begin_quote
+"deterministic reliability" with bundled scripts
+
+프롬프트는 Claude가 코드 생성 (토큰 소모, 오류 가능)
+Skills는 검증된 스크립트 실행
+#+end_quote
+
+*** 4. Organizational Knowledge Capture
+#+begin_quote
+"putting together an onboarding guide for a new hire"
+
+프롬프트는 일회성
+Skills는 절차적 지식 영구 보존
+#+end_quote
+
+** Document Skills 분석: PDF, XLSX, DOCX
+
+*** PDF Skills의 복잡성
+
+*Forms 채우기 절차:*
+1. =check_fillable_fields.py= - 채울 수 있는 필드 확인
+2. =extract_form_field_info.py= - 필드 정보 JSON 추출
+3. =convert_pdf_to_images.py= - PDF → PNG 변환
+4. Bounding box 분석 (이미지 좌표)
+5. =create_validation_image.py= - 검증 이미지 생성
+6. =fill_fillable_fields.py= - 실제 채우기
+
+**총 8개 Python 스크립트!**
+
+#+begin_quote
+이것이 Skill인 이유:
+Claude 혼자 매번 이 절차를 수행? → 토큰 폭발 + 오류 많음
+Skill로 번들? → 안정적, 재사용 가능
+#+end_quote
+
+*** XLSX Skills의 CRITICAL 규칙
+
+#+begin_example
+MUST:
+- Zero Formula Errors (필수)
+- NEVER hardcode values, ALWAYS use formulas
+- Color coding (Blue=input, Black=formula, Green=internal link...)
+- recalc.py로 LibreOffice 실행하여 공식 재계산
+#+end_example
+
+#+begin_quote
+이것이 Skill인 이유:
+Excel은 단순 데이터 파일이 아님
+동적 계산 시스템, 업데이트 가능해야 함
+Claude 혼자? → 공식 오류, 업데이트 불가
+Skill? → 검증된 절차, LibreOffice 자동 실행
+#+end_quote
+
+*** DOCX Skills의 Tracked Changes
+
+#+begin_example
+Redlining workflow:
+- OOXML 구조 이해
+- Tracked changes 보존
+- Comments 처리
+- Pandoc 옵션 (--track-changes=all)
+#+end_example
+
+* Denote-Org Skills가 필요한 이유
+
+** 문제 분석: 3,000+ 파일 Denote PKM
+
+*** 문제 1: Denote 파일명 = 특수 도메인 지식
+
+#+begin_example
+20251021T105353--프로젝트-제목__llmlog_denote_orgmode.org
+│              │                │
+│              │                └─ 태그 (underscore separated)
+│              └─ 한글 제목 (hyphen separated)
+└─ Timestamp (Denote ID, 유일 식별자)
+#+end_example
+
+**Without Skill:**
+- Claude: "이게 무슨 형식이지?" 매번 추측
+- 파일명 파싱 로직 매번 Python/Bash로 생성
+- 한글 제목 처리 헷갈림
+- → **토큰 낭비, 오류 발생**
+
+**With Skill:**
+#+begin_src python
+# scripts/denote_parser.py (한 번만 작성)
+def parse_denote_filename(filename):
+    """
+    20251021T105353--프로젝트-제목__llmlog_denote.org
+    →
+    {
+        'timestamp': '20251021T105353',
+        'title': '프로젝트 제목',
+        'tags': ['llmlog', 'denote'],
+        'extension': 'org'
+    }
+    """
+#+end_src
+
+→ **재사용 가능, 검증됨, 빠름**
+
+*** 문제 2: 3,000 파일 검색 = 복잡한 절차
+
+**Without Skill:**
+#+begin_src bash
+# Claude가 매번 실행:
+find ~/org -name "*20251021T105353*"
+# 하위 디렉토리: bib/ meta/ notes/ journal/ llmlog/ office/ configs/ ...
+# 3,000 파일 스캔 → 느림
+# 매번 토큰 소모
+#+end_src
+
+**With Skill:**
+#+begin_src python
+# scripts/denote_finder.py (캐싱 가능)
+def find_denote_file(identifier, silos):
+    """
+    인덱스 구축 (한 번)
+    이후 검색 즉시 반환
+    """
+#+end_src
+
+→ **효율적, 캐싱, 확장 가능**
+
+*** 문제 3: 지식 그래프 = 복잡도 폭발
+
+**시나리오:**
+#+begin_example
+User: "20251021T105353와 연결된 모든 파일 보여줘"
+#+end_example
+
+**Without Skill:**
+1. 파일 읽기
+2. `[[denote:20251021T074500]]` links 찾기
+3. 각 ID마다 find 실행 (문제 2 반복)
+4. 2-hop 연결? 3-hop?
+5. → **토큰 폭발, 느림**
+
+**With Skill:**
+#+begin_src python
+# scripts/denote_graph.py
+def build_knowledge_graph(silo):
+    """
+    한 번 구축, 캐싱
+    graph = {
+        '20251021T105353': {
+            'links_to': ['20251021T074500', ...],
+            'linked_from': ['20251020T...', ...],
+            'tags': ['llmlog', 'denote'],
+            'title': '...'
+        }
+    }
+    """
+
+def get_connected_nodes(identifier, hops=2):
+    """즉시 반환"""
+#+end_src
+
+→ **그래프 알고리즘, 캐싱, 빠름**
+
+*** 문제 4: Literate Programming = Emacs 동작 재현
+
+**시나리오:**
+#+begin_example
+User: "org 파일 코드 블록 실행해줘"
+#+end_example
+
+Org-mode 코드 블록:
+#+begin_src org
+,#+name: example-block
+,#+begin_src bash :tangle /tmp/script.sh :results output
+echo "Hello from org-babel"
+,#+end_src
+
+,#+RESULTS:
+: Hello from org-babel
+#+end_src
+
+**Without Skill:**
+- Claude가 수동으로 `#+begin_src` 찾기
+- `:tangle` 옵션 파싱 (파일 경로 추출)
+- 코드 추출, 실행
+- `:results` 부분 업데이트
+- → **org 구조 깨질 위험, 복잡함**
+
+**With Skill:**
+#+begin_src python
+# scripts/org_execute.py (Emacs org-babel 재현)
+def execute_org_blocks(filepath):
+    """
+    1. orgparse로 구조 파싱
+    2. code blocks 찾기
+    3. :tangle 옵션 처리
+    4. 안전하게 실행
+    5. :results 업데이트 (구조 보존)
+    """
+#+end_src
+
+→ **안전, Emacs 호환, 재현 가능**
+
+*** 문제 5: Silo 관리 = 여러 디렉토리
+
+**시나리오:**
+#+begin_example
+User: "20251021T105353 파일 어디 있어?"
+#+end_example
+
+**Silos:**
+- =~/org/= (3,000+ 파일)
+- =~/claude-memory/= (AI 메모리)
+- =~/repos/*/docs/= (프로젝트별)
+
+**Without Skill:**
+- Claude: "~/org/에 있나? 아니면..."
+- 매번 여러 find 실행
+- 헷갈림
+
+**With Skill:**
+#+begin_src python
+# scripts/denote_silo.py
+def find_in_silos(identifier, silos):
+    """
+    여러 silo 동시 검색
+    우선순위 적용
+    캐싱
+    """
+#+end_src
+
+→ **명확, 자동, 빠름**
+
+* Skills vs 프롬프트: 결정적 차이
+
+** Skills가 필요한 케이스 (Anthropic 패턴)
+
+| Document Skill | 왜 Skills인가? | 핵심 스크립트 | 단순 프롬프트로? |
+|----------------|---------------|-------------|----------------|
+| **PDF** | Forms 채우기 복잡 | 8개 (check, fill, validate...) | ❌ 토큰 폭발 |
+| **XLSX** | 공식 유지 필수 | recalc.py (LibreOffice) | ❌ 공식 오류 |
+| **DOCX** | Tracked changes | OOXML 파싱 | ❌ 구조 손상 |
+| **Denote-Org** | 3,000 파일 그래프 | finder, graph, silo | ❌ 느림, 오류 |
+
+** 단순 프롬프트가 될 위험
+
+#+begin_quote
+❌ "Denote 파일명은 이런 형식이야. 파싱해줘."
+   → Claude: 매번 코드 생성, 토큰 낭비
+
+❌ "org 파일 코드 블록 실행해줘."
+   → Claude: 매번 파싱 로직 작성, 구조 깨질 위험
+
+❌ "3,000 파일에서 이 ID 찾아줘."
+   → Claude: find 반복 실행, 느림
+#+end_quote
+
+** Skills로 해결
+
+#+begin_quote
+✅ **Domain Knowledge 번들**
+   - Denote 파일명 규칙
+   - Frontmatter 스펙
+   - Links 문법
+
+✅ **Executable Scripts**
+   - denote_parser.py (검증됨)
+   - denote_finder.py (캐싱)
+   - org_execute.py (안전)
+
+✅ **Procedural Knowledge**
+   - "이런 경우 이렇게 한다"
+   - PDF Forms처럼 복잡한 절차
+   - 재사용 가능한 패턴
+
+✅ **Performance**
+   - 스크립트 실행 (토큰 생성 아님)
+   - 캐싱
+   - 배치 처리
+#+end_quote
+
+* 프로젝트 목표: Denote PKM을 Claude의 Domain으로
+
+** 핵심 목표
+
+#+begin_quote
+**Denote + Org-mode를 Claude가 "네이티브"로 다루게 한다**
+
+PDF/XLSX/DOCX처럼,
+Denote-Org도 Claude의 전문 영역이 되게 한다.
+#+end_quote
+
+** 구체적 목표
+
+*** 1. Denote Domain Expertise
+- 파일명 규칙 완벽 이해
+- Frontmatter 자동 파싱
+- Links 즉시 해결
+- Silo 자동 관리
+
+*** 2. 3,000+ Files Scale
+- 효율적 검색 (캐싱)
+- 지식 그래프 구축
+- 배치 처리
+
+*** 3. Literate Programming
+- Emacs org-babel 호환
+- 안전한 코드 실행
+- 구조 보존
+
+*** 4. Org-mode Foundation
+- Heading, property, timestamp
+- Table 연산
+- Export (markdown, PDF, HTML)
+
+** 차별화 요소
+
+| 기존 접근 | 이 프로젝트 |
+|----------|-----------|
+| Org-mode 일반 지원 | **Denote 특화** |
+| 단순 파싱 | **운영 시스템** |
+| 토큰 기반 | **스크립트 기반** |
+| 장난감 예제 | **3,000+ 파일 검증** |
+
+* 9개 레이어 시스템과의 연결
+
+** Layer 3: Knowledge Management
+
+이 프로젝트는 Layer 3의 핵심 구성 요소:
+
+#+begin_example
+Layer 3: Knowledge Management
+├── Zotero (156k+ lines 서지 데이터)
+└── Denote-Org Skills (3,000+ org 파일) 🆕
+#+end_example
+
+** 다른 레이어와의 상호작용
+
+*** Layer 4 (claude-config)와 통합
+- =~/claude-memory/= silo 관리
+- PARA 방법론 (Projects/Areas/Resources/Archives)
+- Denote 형식으로 AI 메모리 저장
+
+*** Layer 3.5 (embedding-config)와 통합
+- Org 파일 벡터화
+- org-db-v3 RAG 파이프라인
+- 의미론적 검색
+
+*** Layer 5a (memex-kb)와 통합
+- Markdown → Org 변환
+- Denote 파일명 생성
+- 마이그레이션 대상
+
+*** Layer 7 (notes)과 통합
+- Org → Markdown export
+- 디지털 가든 퍼블리싱
+- Quartz 4 연동
+
+* 작업 로그
+
+** [2025-10-21 Tue 07:00~08:00] Anthropic Life Sciences 분석
+
+*** 작업 내용
+1. Life Sciences 영상 내용 분석
+2. 9개 레이어 시스템 문서 확인
+3. embedding-config 발견 (Layer 3.5)
+4. 연관성 분석
+
+*** 핵심 통찰
+- embedding-config = Life Sciences의 PubMed 패턴
+- 9개 레이어 = Personal Life Sciences
+
+*** 결과물
+- =~/org/llmlog/20251021T074500--anthropic-life-sciences와-tools-for-life-패러다임-aions-클럽-비전__*.org=
+
+** [2025-10-21 Tue 10:00~11:00] Org-mode 전환 프로젝트
+
+*** 작업 내용
+1. Markdown → Org-mode 전환 진행 중
+2. Literate programming 필요성 인식
+3. =~/org/llmlog/20251021T105353--프로젝트-denote-문서-org-mode-전환__*.org= 생성
+
+** [2025-10-21 Tue 11:00~11:30] Skills 본질 파악
+
+*** 작업 내용
+1. Anthropic Skills 리포 2개 클론
+   - =~/repos/3rd/snthropics-skills=
+   - =~/repos/3rd/awesome-claude-skills=
+
+2. Document Skills 분석
+   - PDF: 8개 스크립트
+   - XLSX: CRITICAL 규칙들
+   - DOCX: Tracked changes
+
+3. WebFetch: Anthropic 공식 블로그 분석
+
+*** 핵심 질문 (사용자)
+#+begin_quote
+"Skills를 Anthropic이 만든 이유가 있고 필요한 케이스가 있을거야.
+거기에 집중해서 Skill가 되어야해."
+#+end_quote
+
+→ 프로젝트 방향 전환!
+
+** [2025-10-21 Tue 11:30~현재] Denote-Org Skills 시작
+
+*** 작업 내용
+1. ✅ =~/repos/gh/orgmode-skills= 폴더 생성
+2. ✅ Git 초기화 준비
+3. ✅ README.md 작성 (영어)
+4. ✅ README-KO.md 작성 (한글)
+5. ✅ 이 문서 작성 (작업 로그)
+
+*** 핵심 결정
+
+**** 이름: `orgmode-skills` (폴더) + `denote-org` (skill name)
+- 폴더명: 직관적 (orgmode-skills)
+- Skill 이름: 우선순위 (denote-org, Denote가 핵심)
+
+**** 구조: PDF/XLSX 패턴 따름
+- SKILL.md (메인)
+- denote-core.md, denote-silo.md (상세)
+- scripts/ (Python)
+- docs/ (Denote 형식 작업 로그)
+
+**** 메시지: "Skills ≠ Prompt"
+- Onboarding guide
+- Procedural knowledge
+- Executable scripts
+- **NOT a converter, AN operational system**
+
+* 0.1 버전 체크리스트
+
+** Phase 1: 기반 (현재)
+- [X] 프로젝트 폴더 생성 (~/repos/gh/orgmode-skills)
+- [X] README.md (영어)
+- [X] README-KO.md (한글)
+- [X] docs/20251021T113500--*.org (이 문서)
+- [ ] LICENSE (Apache 2.0)
+- [ ] .gitignore (Python, Emacs)
+- [ ] SKILL.md (Denote 중심)
+
+** Phase 2: Denote Core
+- [ ] scripts/denote_parser.py (파일명 파싱)
+- [ ] scripts/denote_links.py (링크 해결)
+- [ ] scripts/denote_silo.py (silo 관리)
+- [ ] denote-core.md (Denote 명세)
+- [ ] denote-silo.md (Silo 가이드)
+- [ ] 테스트 (3,000+ 파일)
+
+** Phase 3: Knowledge Graph
+- [ ] scripts/denote_graph.py (그래프 구축)
+- [ ] denote-knowledge-graph.md (문서화)
+- [ ] 성능 테스트 (캐싱, 인덱싱)
+
+** Phase 4: Org-mode Base
+- [ ] scripts/org_parser.py (orgparse)
+- [ ] scripts/org_execute.py (코드 블록)
+- [ ] scripts/org_export.py (export)
+- [ ] orgmode-base.md (문서화)
+- [ ] literate.md (Literate programming)
+
+** Phase 5: 0.1 Release
+- [ ] requirements.txt
+- [ ] examples/ (기본, literate, denote)
+- [ ] 전체 테스트
+- [ ] Git commit & push
+- [ ] GitHub Public 전환
+- [ ] 커뮤니티 공유
+
+* 다음 단계
+
+** 즉시 실행
+1. LICENSE 파일 (Apache 2.0)
+2. .gitignore
+3. Git 초기화 및 첫 커밋
+4. SKILL.md 작성 시작
+
+** 단기 (1주)
+- Denote Core 스크립트 구현
+- 기본 문서화
+- 로컬 테스트
+
+** 중기 (2주)
+- Knowledge Graph 구현
+- Org-mode 기능 추가
+- 0.1 릴리즈
+
+** 장기
+- 커뮤니티 피드백
+- Anthropic Skills 생태계 기여
+- awesome-claude-skills PR
+
+* 핵심 통찰
+
+** Skills의 본질
+
+#+begin_quote
+**Skills = Domain Procedural Knowledge + Executable Scripts**
+
+프롬프트: "이렇게 해봐" (일회성)
+Skills: "이 도메인에서는 항상 이렇게 한다" (재사용)
+
+프롬프트: Claude가 코드 생성
+Skills: 검증된 스크립트 실행
+
+프롬프트: 토큰 소모
+Skills: 효율성
+
+**Skills는 "신입 사원을 위한 온보딩 가이드"다**
+#+end_quote
+
+** Denote-Org Skills의 가치
+
+#+begin_quote
+**PDF/XLSX가 복잡한 문서 포맷을 다루듯,
+Denote-Org는 복잡한 지식 시스템을 다룬다.**
+
+3,000+ 파일 지식 베이스는:
+- 단순 텍스트 파일들이 아님
+- 지식 그래프 (Denote links)
+- 여러 도메인 (silos)
+- Literate programming (실행 가능)
+- 살아있는 시스템
+
+**이것이 Skills가 필요한 이유다.**
+#+end_quote
+
+** Life Sciences 패러다임 적용
+
+#+begin_quote
+Anthropic Life Sciences:
+- PubMed (수백만 논문) + Claude = Scientific AI
+
+Denote-Org Skills:
+- Denote (3,000+ 파일) + Claude = Personal Knowledge AI
+
+**같은 패러다임. Biology → Living 확장.**
+#+end_quote
+
+* 참고 자료
+
+** Anthropic 리소스
+- [[https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills][Agent Skills Engineering Blog]]
+- [[https://support.claude.com/en/articles/12512176-what-are-skills][What are Skills?]]
+- [[https://github.com/anthropics/skills][Official Skills Repository]]
+
+** Denote 리소스
+- [[https://protesilaos.com/emacs/denote][Denote by Protesilaos Stavrou]]
+- [[https://orgmode.org/][Org-mode]]
+
+** 관련 프로젝트
+- [[denote:20251015T093311][@힣: 시간과정신의방 -CONFIG 생태계]]
+- [[denote:20251021T074500][Anthropic Life Sciences와 Tools for Life 패러다임]]
+- [[denote:20240601T204208][† #에이아이온스클럽인터내쇼날]]
+
+* 맺음말
+
+#+begin_quote
+이 프로젝트는 단순히 Org-mode를 Claude가 읽게 하려는 것이 아닙니다.
+
+**Anthropic이 생명과학에서 증명한 패러다임을
+개인 지식 관리로 확장하는 것입니다.**
+
+Life Sciences (Biology) → Life Everything (Living)
+
+PDF/XLSX Skills가 문서 포맷의 전문가를 만들듯,
+Denote-Org Skills는 개인 지식 시스템의 전문가를 만듭니다.
+
+**3,000+ 파일로 검증된 실제 시스템.**
+**단순 변환기가 아닌 운영 시스템.**
+**프롬프트가 아닌 Skills.**
+
+이것이 Tools for Life의 구현입니다.
+#+end_quote
+
+---
+
+**작성자:** @junghan0611
+**최초 작성:** 2025-10-21T11:35:00+09:00
+**최종 업데이트:** 2025-10-21T11:35:00+09:00
+**상태:** 🟡 개발 중 (0.1 릴리즈 목표)
