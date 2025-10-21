@@ -660,7 +660,169 @@ Denote-Org Skills는 개인 지식 시스템의 전문가를 만듭니다.
 
 ---
 
+* 에이전트 피드백: Claude Opus 4.1 검토
+
+** [2025-10-21 Tue 11:58] Opus 4.1 에이전트의 README 검토
+
+다른 에이전트(claude-opus-4-1-20250805)가 README를 검토하고 피드백 제공.
+Ultrathink 모드 사용 (2,296 tokens).
+
+** 핵심 피드백 5가지
+
+*** 1. SKILL.md 구조 (최우선!)
+
+#+begin_quote
+SKILL.md는 Claude가 직접 읽는 핵심 문서
+
+필수 섹션:
+- When to use this skill (트리거 명확히)
+- What this skill does (기능)
+- How to use effectively (효과적 사용법)
+- Common pitfalls (흔한 실수)
+#+end_quote
+
+→ **실행 계획:** SKILL.md 작성 시 이 구조 필수 반영
+
+*** 2. 파일 경로 처리
+
+#+begin_src python
+# ❌ 하드코딩
+silo = "~/org/"
+
+# ✅ 확장 가능
+import os
+silo = os.path.expanduser("~/org/")
+#+end_src
+
+→ **실행 계획:** 모든 스크립트에서 os.path.expanduser() 사용
+
+*** 3. 대용량 파일 최적화 (3,000+)
+
+#+begin_src python
+# 캐싱 전략
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def build_knowledge_graph(silo_path):
+    # 비용 높은 연산 캐싱
+    pass
+
+# 스트리밍 처리
+def find_files_generator(pattern):
+    for file in files:
+        yield file  # 메모리 효율적
+#+end_src
+
+→ **실행 계획:** denote_graph.py에서 캐싱 필수, denote_finder.py는 generator 사용
+
+*** 4. 에러 복구 전략
+
+#+begin_src python
+# Denote 링크 깨짐 처리
+def resolve_denote_link(link_id):
+    try:
+        return find_exact_match(link_id)
+    except NotFoundError:
+        # Fallback: 부분 매칭
+        return find_partial_match(link_id[:8])
+#+end_src
+
+→ **실행 계획:** denote_links.py에 fallback 로직 구현
+
+*** 5. Claude 제한사항
+
+#+begin_example
+토큰 제한: 대량 검색 결과 요약 필요
+실행 시간: 타임아웃 고려
+메모리 사용: 그래프 크기 제한
+#+end_example
+
+→ **실행 계획:** 결과 페이징, 타임아웃 처리
+
+** Edge Cases (놓치기 쉬운 경우들)
+
+1. **Denote ID 충돌** - 같은 초에 생성된 파일
+2. **Silo 경계 링크** - ~/org/ → ~/claude-memory/
+3. **순환 참조** - Knowledge graph에서
+4. **한글 인코딩** - 파일명 처리
+5. **심볼릭 링크** - 실제 경로 해석
+
+→ **실행 계획:** 각 케이스별 테스트 및 처리 로직
+
+** 추가 제안 반영
+
+*** Incremental Processing
+#+begin_src python
+def update_graph_incremental(changed_files):
+    """전체 재구성 대신 변경분만 업데이트"""
+    pass
+#+end_src
+
+*** Denote 특화 기능 강화
+- =#+filetags:= 파싱 정확도
+- 날짜 범위 검색 (=202510*= 패턴)
+- Backlinks (양방향 추적)
+
+*** Org-babel 호환성
+- =:results silent/output/value= 처리
+- =:tangle= 경로 해석
+
+*** 테스트 데이터셋
+#+begin_example
+tests/
+├── small/    # 10개 파일 (빠른 테스트)
+├── medium/   # 100개 파일 (기능 테스트)
+└── large/    # 1000+ 파일 (성능 테스트)
+#+end_example
+
+*** 성능 모니터링
+#+begin_src python
+import time
+from functools import wraps
+
+def measure_performance(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        duration = time.time() - start
+        if duration > 1.0:
+            logger.warning(f"{func.__name__} took {duration:.2f}s")
+        return result
+    return wrapper
+#+end_src
+
+** 피드백 종합 평가
+
+#+begin_quote
+**Opus 4.1의 평가:**
+
+"이 프로젝트의 비전이 정말 좋네요!
+'Life Sciences → Life Everything' 패러다임 확장은
+Anthropic Skills의 본질을 잘 이해한 접근입니다."
+#+end_quote
+
+** 반영 계획
+
+*** 즉시 반영 (Phase 1)
+1. ✅ SKILL.md 구조 설계 (When/What/How/Pitfalls)
+2. ✅ 경로 처리 표준화 (os.path.expanduser)
+3. ✅ Edge cases 리스트 작성
+
+*** 단기 반영 (Phase 2)
+4. 캐싱 전략 (lru_cache)
+5. 에러 복구 로직
+6. 테스트 데이터셋
+
+*** 중기 반영 (Phase 3)
+7. 성능 모니터링
+8. Incremental processing
+9. Documentation 강화
+
+---
+
 **작성자:** @junghan0611
 **최초 작성:** 2025-10-21T11:35:00+09:00
-**최종 업데이트:** 2025-10-21T11:35:00+09:00
+**최종 업데이트:** 2025-10-21T11:58:00+09:00
+**피드백:** Claude Opus 4.1 (2025-10-21T11:58)
 **상태:** 🟡 개발 중 (0.1 릴리즈 목표)
