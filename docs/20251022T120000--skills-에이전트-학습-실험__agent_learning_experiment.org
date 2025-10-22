@@ -1,0 +1,420 @@
+#+title:      Skills 에이전트 학습 실험
+#+date:       [2025-10-22 Tue 12:00]
+#+filetags:   :agent:learning:experiment:skills:
+#+identifier: 20251022T120000
+
+* Skills 에이전트 학습 실험
+:PROPERTIES:
+:CUSTOM_ID: skills-에이전트-학습-실험
+:END:
+
+** 🎯 실험 목적
+:PROPERTIES:
+:CUSTOM_ID: 실험-목적
+:END:
+
+**에이전트 학습**: Skills 없이 vs 있을 때 에이전트의 행동 차이 관찰
+
+*** 핵심 가설
+:PROPERTIES:
+:CUSTOM_ID: 핵심-가설
+:END:
+
+#+begin_quote
+Skills가 있으면 에이전트가 **명확하게 다르게 행동**한다.
+차이가 명확하지 않으면 Skills가 불필요한 것이다.
+#+end_quote
+
+** 🧪 실험 설계
+:PROPERTIES:
+:CUSTOM_ID: 실험-설계
+:END:
+
+*** 실험 조건
+:PROPERTIES:
+:CUSTOM_ID: 실험-조건
+:END:
+
+| 조건 | 설명 |
+|------|------|
+| **모델** | Haiku (우선), Sonnet (비교) |
+| **환경** | Claude Code CLI |
+| **비교** | Skills 없이 vs Skills 활성화 |
+| **테스트** | PDF, XLSX 작업 |
+
+*** 왜 Haiku 우선인가?
+:PROPERTIES:
+:CUSTOM_ID: 왜-haiku-우선인가
+:END:
+
+- 부담 없이 여러 번 테스트 가능
+- Haiku로 되면 = Skills가 강력한 것
+- Haiku로 안되면 = 모델 능력 문제일 수 있음
+
+** 📋 실험 1: PDF 처리
+:PROPERTIES:
+:CUSTOM_ID: 실험-1-pdf-처리
+:END:
+
+*** Step 1-A: Skills 없이 (Baseline)
+:PROPERTIES:
+:CUSTOM_ID: step-1-a-skills-없이-baseline
+:END:
+
+*에이전트가 수행할 작업*:
+
+#+begin_src markdown
+테스트 PDF 파일(test.pdf)에서:
+1. 전체 텍스트 추출
+2. 첫 번째 페이지만 분리
+3. 두 개의 PDF 병합
+
+결과를 보고하시오.
+#+end_src
+
+*관찰 포인트*:
+- [ ] 에이전트가 어떤 도구를 사용하는가?
+- [ ] Python 라이브러리를 직접 코딩하는가?
+- [ ] 실행 가능한 코드를 생성하는가?
+- [ ] 에러가 발생하는가?
+
+*학습 일지*:
+#+begin_example
+모델: Haiku / Sonnet
+날짜:
+결과:
+- 사용 도구:
+- 성공/실패:
+- 특이사항:
+#+end_example
+
+*** Step 1-B: PDF Skill 활성화
+:PROPERTIES:
+:CUSTOM_ID: step-1-b-pdf-skill-활성화
+:END:
+
+*Skill 설치*:
+
+#+begin_src bash
+# 방법 1: 마켓플레이스
+/plugin marketplace add anthropics/skills
+/plugin install document-skills@anthropic-agent-skills
+
+# 방법 2: 로컬 (이미 있음)
+# ~/repos/3rd/snthropics-skills/document-skills/pdf/
+#+end_src
+
+*에이전트가 수행할 작업* (동일):
+
+#+begin_src markdown
+PDF skill을 사용하여 test.pdf에서:
+1. 전체 텍스트 추출
+2. 첫 번째 페이지만 분리
+3. 두 개의 PDF 병합
+
+결과를 보고하시오.
+#+end_src
+
+*관찰 포인트*:
+- [ ] 에이전트가 PDF skill을 인식하는가?
+- [ ] scripts/ 폴더의 Python 스크립트를 사용하는가?
+- [ ] Step 1-A와 다른 접근 방식인가?
+- [ ] 더 빠르거나 안정적인가?
+
+*학습 일지*:
+#+begin_example
+모델: Haiku / Sonnet
+날짜:
+결과:
+- Skill 인식 여부:
+- 사용한 스크립트:
+- Step 1-A와의 차이:
+- 성공/실패:
+#+end_example
+
+*** Step 1-C: 비교 분석
+:PROPERTIES:
+:CUSTOM_ID: step-1-c-비교-분석
+:END:
+
+| 기준 | Skills 없이 (1-A) | Skills 있을 때 (1-B) |
+|------|-------------------|---------------------|
+| 성공 여부 | | |
+| 코드 품질 | | |
+| 실행 시간 | | |
+| 에러 처리 | | |
+| 재현성 | | |
+
+*결론*:
+- Skills의 차이가 명확한가? [ ] 예 [ ] 아니오
+- 이유:
+
+** 📋 실험 2: XLSX 처리
+:PROPERTIES:
+:CUSTOM_ID: 실험-2-xlsx-처리
+:END:
+
+*** Step 2-A: Skills 없이 (Baseline)
+:PROPERTIES:
+:CUSTOM_ID: step-2-a-skills-없이-baseline
+:END:
+
+*에이전트가 수행할 작업*:
+
+#+begin_src markdown
+Excel 파일(test.xlsx)을 생성하시오:
+1. 3개 컬럼 (이름, 나이, 점수)
+2. 5개 행 데이터
+3. 점수 평균 계산 (수식 사용)
+4. 컬럼 헤더 볼드 처리
+
+결과를 보고하시오.
+#+end_src
+
+*학습 일지*:
+#+begin_example
+모델: Haiku / Sonnet
+날짜:
+결과:
+- 수식이 작동하는가?
+- 포맷팅이 적용되는가?
+- 생성 코드:
+#+end_example
+
+*** Step 2-B: XLSX Skill 활성화
+:PROPERTIES:
+:CUSTOM_ID: step-2-b-xlsx-skill-활성화
+:END:
+
+*에이전트가 수행할 작업* (동일):
+
+#+begin_src markdown
+XLSX skill을 사용하여 Excel 파일 생성:
+1. 3개 컬럼 (이름, 나이, 점수)
+2. 5개 행 데이터
+3. 점수 평균 계산 (수식 사용)
+4. 컬럼 헤더 볼드 처리
+
+결과를 보고하시오.
+#+end_src
+
+*관찰 포인트*:
+- [ ] recalc.py가 호출되는가?
+- [ ] 수식 계산이 더 정확한가?
+- [ ] LibreOffice 통합이 보이는가?
+
+*학습 일지*:
+#+begin_example
+모델: Haiku / Sonnet
+날짜:
+결과:
+- recalc.py 사용 여부:
+- Step 2-A와의 차이:
+#+end_example
+
+*** Step 2-C: 비교 분석
+:PROPERTIES:
+:CUSTOM_ID: step-2-c-비교-분석
+:END:
+
+| 기준 | Skills 없이 (2-A) | Skills 있을 때 (2-B) |
+|------|-------------------|---------------------|
+| 파일 생성 | | |
+| 수식 작동 | | |
+| 포맷팅 | | |
+| 코드 복잡도 | | |
+
+*결론*:
+- XLSX skill의 가치가 있는가? [ ] 예 [ ] 아니오
+- recalc.py의 역할:
+
+** 📋 실험 3: 복잡한 작업
+:PROPERTIES:
+:CUSTOM_ID: 실험-3-복잡한-작업
+:END:
+
+*** Step 3: PDF 폼 채우기 (고난도)
+:PROPERTIES:
+:CUSTOM_ID: step-3-pdf-폼-채우기-고난도
+:END:
+
+*에이전트가 수행할 작업*:
+
+#+begin_src markdown
+fillable PDF form(form.pdf)에 데이터를 채우시오:
+- Name: "홍길동"
+- Age: "30"
+- Email: "hong@example.com"
+
+결과를 보고하시오.
+#+end_src
+
+*Skills 없이 결과*:
+#+begin_example
+
+#+end_example
+
+*Skills 있을 때 결과*:
+#+begin_example
+사용 스크립트:
+- check_fillable_fields.py
+- extract_form_field_info.py
+- fill_fillable_fields.py
+- check_bounding_boxes.py
+
+#+end_example
+
+*결론*:
+- 이 작업은 Skills 없이 가능한가? [ ] 예 [ ] 아니오
+- bounding box 계산이 필요한가? [ ] 예 [ ] 아니오
+
+** 🔬 모델별 비교
+:PROPERTIES:
+:CUSTOM_ID: 모델별-비교
+:END:
+
+*** Haiku vs Sonnet
+:PROPERTIES:
+:CUSTOM_ID: haiku-vs-sonnet
+:END:
+
+| 작업 | Haiku (Skills 없이) | Haiku (Skills 있음) | Sonnet (Skills 없이) | Sonnet (Skills 있음) |
+|------|---------------------|---------------------|---------------------|---------------------|
+| PDF 텍스트 추출 | | | | |
+| PDF 병합 | | | | |
+| XLSX 생성 | | | | |
+| PDF 폼 채우기 | | | | |
+
+*인사이트*:
+- Haiku로 Skills가 작동하는가?
+- Sonnet과 차이가 얼마나 나는가?
+- Skills가 모델 능력을 보완하는가?
+
+** 🎓 claude-memory와의 차이
+:PROPERTIES:
+:CUSTOM_ID: claude-memory와의-차이
+:END:
+
+*** 실험 4: Denote 파일 찾기
+:PROPERTIES:
+:CUSTOM_ID: 실험-4-denote-파일-찾기
+:END:
+
+*에이전트가 수행할 작업*:
+
+#+begin_src markdown
+~/org/llmlog/ 에서 "skills" 태그가 있는 파일을 모두 찾으시오.
+#+end_src
+
+*현재 방식 (claude-memory + CLAUDE.md)*:
+#+begin_example
+결과:
+- 사용 도구: Glob, Grep
+- 소요 시간:
+- 토큰 사용:
+#+end_example
+
+*만약 denote-org skill이 있다면*:
+#+begin_example
+예상:
+- denote_finder.py --tags skills
+- 캐싱된 결과
+- 토큰 최적화?
+#+end_example
+
+*질문*:
+- [ ] Glob/Grep으로 충분한가?
+- [ ] denote_finder.py가 더 빠른가?
+- [ ] 3,000+ 파일에서 차이가 나는가?
+- [ ] 복잡한 알고리즘이 필요한가?
+
+** 📊 최종 판단 프레임워크
+:PROPERTIES:
+:CUSTOM_ID: 최종-판단-프레임워크
+:END:
+
+*** Skills 필요성 체크리스트
+:PROPERTIES:
+:CUSTOM_ID: skills-필요성-체크리스트
+:END:
+
+*PDF/XLSX Skills 검증*:
+- [ ] Skills 없이 vs 있을 때 **명확한 차이**가 있다
+- [ ] 복잡한 알고리즘 (bounding box 수준)이 필요하다
+- [ ] 외부 스크립트 실행이 필수적이다
+- [ ] 단순 프롬프트로 불가능한 작업이다
+- [ ] Haiku 모델에서도 작동한다
+
+*org-mode-skills 검증*:
+- [ ] Denote 파일 찾기가 복잡한 알고리즘인가?
+- [ ] Glob/Grep으로 충분하지 않은가?
+- [ ] 3,000+ 파일에서 성능 차이가 있는가?
+- [ ] scripts 없이는 불가능한 작업인가?
+- [ ] claude-memory와 레이어가 분리되는가?
+
+*** 경계선 정의
+:PROPERTIES:
+:CUSTOM_ID: 경계선-정의
+:END:
+
+| 시스템 | 목적 | 내용 | 변경 빈도 | 예시 |
+|--------|------|------|-----------|------|
+| **claude-memory** | | | | |
+| **Skills** | | | | |
+
+*실험 후 채우기*
+
+** 🎯 최종 결론
+:PROPERTIES:
+:CUSTOM_ID: 최종-결론
+:END:
+
+*** org-mode-skills 필요한가?
+:PROPERTIES:
+:CUSTOM_ID: org-mode-skills-필요한가
+:END:
+
+*판단*: [ ] 필요 [ ] 불필요 [ ] 부분적
+
+*이유*:
+
+*실험 결과 요약*:
+1. PDF/XLSX Skills의 가치:
+2. claude-memory와의 차이:
+3. Denote 작업의 복잡도:
+
+*다음 액션*:
+- [ ] org-mode-skills 개발 진행
+- [ ] CLAUDE.md에 Denote 섹션 추가로 충분
+- [ ] 다른 접근 방법:
+
+** 📝 실험 노트
+:PROPERTIES:
+:CUSTOM_ID: 실험-노트
+:END:
+
+*** 날짜:
+:PROPERTIES:
+:CUSTOM_ID: 날짜
+:END:
+
+*** 발견:
+:PROPERTIES:
+:CUSTOM_ID: 발견
+:END:
+
+*** 의문점:
+:PROPERTIES:
+:CUSTOM_ID: 의문점
+:END:
+
+*** 인사이트:
+:PROPERTIES:
+:CUSTOM_ID: 인사이트
+:END:
+
+--------------
+
+*Created*: 2025-10-22T12:00
+*Purpose*: 에이전트 학습 - Skills 효과 검증
+*Method*: 실험 기반 비교 분석
