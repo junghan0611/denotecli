@@ -1,0 +1,33 @@
+{
+  "name": "glg-skills",
+  "owner": {
+    "name": "Junghan Kim",
+    "email": "junghanacs@gmail.com"
+  },
+  "metadata": {
+    "description": "GLG skills: Denote/org-mode PKM and related workflows.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "denote-org",
+      "description": "Pure Denote/org-mode PKM skill (no external document skills).",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./"
+      ]
+    },
+    {
+      "name": "denote-org-pack",
+      "description": "Local convenience pack: denote-org plus Anthropic document skills (PDF/XLSX) for daily work.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./",
+        "../skills/document-skills/pdf",
+        "../skills/document-skills/xlsx"
+      ]
+    }
+  ]
+}

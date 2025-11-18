@@ -19,6 +19,7 @@ Claude should use this skill when:
 4. **Multi-silo management** - Searching across multiple Denote directories (~/org/, ~/claude-memory/, project docs/)
 5. **Literate programming** - Executing org-mode code blocks with `:tangle` and `:results` options
 6. **Denote metadata extraction** - Parsing file names and org-mode frontmatter
+7. **Org-mode as primary collaboration format** - When both `.org` and `.md` exist for the same content, treat the org file as the primary, authoritative source and use markdown only as an export/share format.
 
 ## What is Denote?
 
@@ -44,6 +45,8 @@ Denote is a note-taking system created by Protesilaos Stavrou that uses:
 **Validated with 3,000+ org files in production PKM systems.**
 
 ## Core Capabilities
+
+> **Important behavioral rule:** When the user explicitly asks to "read" or "understand" an org-mode document, do not immediately fall back to raw grep searches unless the user asks for grep specifically. First, use the structured org-mode reading strategy below (headings → history → focused sections) and only then use grep as a secondary tool.
 
 ### 1. Denote File Name Parsing
 
@@ -153,6 +156,54 @@ cycles = detect_circular_refs(graph)
 - Incremental updates supported
 
 ### 5. Multi-Silo Management
+
+#### 5.1 Preferred org-mode reading strategy
+
+When working with org-mode files in this environment, follow this structured process instead of treating them as plain text:
+
+1. **Identify org-context and silos**
+   - If a file path matches any of the following, assume it is part of a Denote/org knowledge base and prefer org-mode behavior over ad-hoc grep:
+     - `~/org/**`
+     - `~/org/meta/**`
+     - `~/org/bib/**`
+     - `~/org/notes/**`
+     - `~/org/llmlog/**`
+     - `~/claude-memory/**`
+     - `~/repos/gh/*/docs/**`
+     - `~/repos/work/*/docs/**`
+   - Treat these as **silos** with different roles:
+     - `~/org/meta`  : meta-level models, config, and system design
+     - `~/org/bib`   : bibliography and reference material
+     - `~/org/notes` : long-form notes and thinking
+     - `~/org/llmlog`: LLM conversation logs and experiments
+     - project `docs/`: per-repo documentation tied to code
+
+2. **Parse headings before content**
+   - For large org files, do not read the entire file into context at once.
+   - Instead, first extract only:
+     - The top-level headings (`*`, `**`, `***`)
+     - Their titles and hierarchy
+   - Build a lightweight table of contents (TOC) and use that to decide which sections to inspect in detail.
+
+3. **Locate and summarize history sections early**
+   - If any heading matches common history patterns, treat it as a version/change log and inspect it early:
+     - `* 히스토리`, `* HISTORY`, `* History`, `* 작업 로그`, `* Changelog`, or similar
+   - Summarize:
+     - How the document has evolved over time
+     - Recent significant changes
+     - Any explicit version markers or dates
+
+4. **Drill down into relevant sections only**
+   - After building the TOC and understanding history, only expand the specific headings that are relevant to the current task or user question.
+   - Use grep/rg as a **secondary tool** to locate candidate sections, then return to structured org parsing for interpretation.
+
+5. **Prefer org over markdown when both exist**
+   - If both `X.org` and `X.md` exist for the same conceptual document:
+     - Treat `X.org` as canonical for structure, metadata, and detailed reasoning.
+     - Use `X.md` only as an export/share artifact or when the user explicitly prefers markdown.
+
+This strategy exists to maximize collaboration on org documents as first-class knowledge artifacts, not just as flat text blobs.
+
 
 Search across multiple Denote directories:
 
