@@ -1,0 +1,18 @@
+{
+  "name": "denote-org",
+  "description": "Denote/org-mode PKM skill for 3,000+ file knowledge bases with Korean support",
+  "version": "0.2.0",
+  "author": {
+    "name": "Junghan Kim",
+    "url": "https://github.com/junghan0611"
+  },
+  "repository": "https://github.com/junghan0611/org-mode-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "denote",
+    "org-mode",
+    "pkm",
+    "knowledge-base",
+    "emacs"
+  ]
+}
