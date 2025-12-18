@@ -44,6 +44,46 @@ Denote is a note-taking system created by Protesilaos Stavrou that uses:
 
 **Validated with 3,000+ org files in production PKM systems.**
 
+## Knowledge Base Structure
+
+> **Location**: `~/org/` (symlink to `~/sync/org/`)
+> **Scale**: 3,100+ org files
+
+### Main Directories
+
+| Directory | Purpose | Scale |
+|-----------|---------|-------|
+| `bib/` | Bibliography notes (books, people, concepts) | 800+ files |
+| `meta/` | Meta topics (programming, tools, workflows) | - |
+| `notes/` | Personal notes and collections | - |
+| `journal/` | Daily/weekly journals | - |
+| `llmlog/` | AI/LLM conversation logs | - |
+
+### Content Areas
+Philosophy, Science, Programming, AI, Education, Literature, Spirituality, etc.
+
+### How to Find Files
+
+**Option 1: org-mcp-server (if available)**
+```
+org-file-list, org-search, org-agenda
+```
+
+**Option 2: Standard CLI tools**
+```bash
+# Find by Denote ID
+fd "20251217T105827" ~/org/ --type f
+
+# Find by tag
+fd "__llmlog" ~/org/ --type f
+
+# Search content
+rg "검색어" ~/org/ --type org
+```
+
+### Reference
+For detailed knowledge base configuration, see `~/org/AGENTS.md`.
+
 ## Core Capabilities
 
 > **Important**: Scripts are executed via Bash, not Python import. Use the CLI commands shown below.
@@ -55,13 +95,13 @@ Denote is a note-taking system created by Protesilaos Stavrou that uses:
 **CLI Usage:**
 ```bash
 # Parse a file (filename + frontmatter)
-python3 ~/sync/emacs/orgmode-skills/scripts/denote_parser.py ~/org/path/to/file.org
+python3 ~/.claude/skills/denote-org/scripts/denote_parser.py ~/org/path/to/file.org
 
 # Parse filename only
-python3 ~/sync/emacs/orgmode-skills/scripts/denote_parser.py --filename "20251021T105353--제목__tag.org"
+python3 ~/.claude/skills/denote-org/scripts/denote_parser.py --filename "20251021T105353--제목__tag.org"
 
 # JSON output (recommended for parsing)
-python3 ~/sync/emacs/orgmode-skills/scripts/denote_parser.py --json ~/org/path/to/file.org
+python3 ~/.claude/skills/denote-org/scripts/denote_parser.py --json ~/org/path/to/file.org
 ```
 
 **Example output (--json):**
@@ -93,7 +133,7 @@ python3 ~/sync/emacs/orgmode-skills/scripts/denote_parser.py --json ~/org/path/t
 **CLI Usage:**
 ```bash
 # Extract table of contents from org file
-python3 ~/sync/emacs/orgmode-skills/scripts/org_headings_toc.py ~/org/path/to/file.org
+python3 ~/.claude/skills/denote-org/scripts/org_headings_toc.py ~/org/path/to/file.org
 ```
 
 **Example output:**
@@ -190,14 +230,14 @@ This strategy exists to maximize collaboration on org documents as first-class k
 
 ```bash
 # Get metadata from a Denote file
-python3 ~/sync/emacs/orgmode-skills/scripts/denote_parser.py --json ~/org/llmlog/20241127T161109--제목__tag.org
+python3 ~/.claude/skills/denote-org/scripts/denote_parser.py --json ~/org/llmlog/20241127T161109--제목__tag.org
 ```
 
 ### Example 2: Get TOC Before Reading Large File
 
 ```bash
 # First, get structure overview
-python3 ~/sync/emacs/orgmode-skills/scripts/org_headings_toc.py ~/org/notes/large-file.org
+python3 ~/.claude/skills/denote-org/scripts/org_headings_toc.py ~/org/notes/large-file.org
 
 # Output: 
 # 1	섹션1
