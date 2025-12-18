@@ -11,22 +11,11 @@
   "plugins": [
     {
       "name": "denote-org",
-      "description": "Pure Denote/org-mode PKM skill (no external document skills).",
+      "description": "Denote/org-mode PKM skill for 3,000+ file knowledge bases with Korean support.",
       "source": "./",
       "strict": false,
       "skills": [
         "./"
-      ]
-    },
-    {
-      "name": "denote-org-pack",
-      "description": "Local convenience pack: denote-org plus Anthropic document skills (PDF/XLSX) for daily work.",
-      "source": "./",
-      "strict": false,
-      "skills": [
-        "./",
-        "../skills/document-skills/pdf",
-        "../skills/document-skills/xlsx"
       ]
     }
   ]
