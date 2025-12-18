@@ -1,6 +1,6 @@
 ---
 name: denote-org
-description: "Comprehensive support for Denote-based PKM systems with org-mode foundation. Handles 3,000+ file knowledge bases with Denote file naming (timestamp--title__tags.org), knowledge graph navigation via [[denote:ID]] links, multi-silo management, and literate programming. When Claude needs to: (1) Find Denote files by ID/tags in large knowledge bases, (2) Navigate knowledge graphs with thousands of [[denote:]] links, (3) Execute org-mode code blocks with :tangle/:results options, (4) Manage multiple Denote silos (~/org/, ~/claude-memory/...), or (5) Work with Denote-structured PKM systems at scale."
+description: "Use this skill when working with ~/org/ directory, Denote files (YYYYMMDDTHHMMSS--title__tags.org), or org-mode knowledge bases. Provides scripts for: parsing Denote filenames/metadata, extracting org file TOC, and navigating 3,000+ file PKM systems. Trigger on: ~/org/, ~/org/llmlog/, ~/org/bib/, Denote ID parsing, org heading extraction."
 ---
 
 # Denote-Org Skills
@@ -64,12 +64,6 @@ Philosophy, Science, Programming, AI, Education, Literature, Spirituality, etc.
 
 ### How to Find Files
 
-**Option 1: org-mcp-server (if available)**
-```
-org-file-list, org-search, org-agenda
-```
-
-**Option 2: Standard CLI tools**
 ```bash
 # Find by Denote ID
 fd "20251217T105827" ~/org/ --type f
@@ -77,8 +71,14 @@ fd "20251217T105827" ~/org/ --type f
 # Find by tag
 fd "__llmlog" ~/org/ --type f
 
+# Find by title keyword
+fd "wsl2" ~/org/ --type f
+
 # Search content
-rg "검색어" ~/org/ --type org
+rg "검색어" ~/org/ -t org
+
+# List recent files
+ls -lt ~/org/llmlog/*.org | head -10
 ```
 
 ### Reference
