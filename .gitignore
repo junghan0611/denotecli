@@ -37,3 +37,6 @@ test-output/
 
 # Temp files
 temp/
+
+.claude
+.agent-shell
