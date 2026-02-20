@@ -13,8 +13,8 @@ Binary must be in PATH. Build from source:
 
 ```bash
 # Clone (if not already)
-git clone https://github.com/junghan0611/org-mode-skills.git
-cd org-mode-skills
+git clone https://github.com/junghan0611/denotecli.git
+cd denotecli
 
 # Build + install to ~/.local/bin
 ./run.sh build

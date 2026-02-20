@@ -7,8 +7,8 @@ Denote knowledge base CLI (`denotecli`) for AI agents. Searches, reads, and anal
 ## Install
 
 ```bash
-git clone https://github.com/junghan0611/org-mode-skills.git
-cd org-mode-skills
+git clone https://github.com/junghan0611/denotecli.git
+cd denotecli
 
 # Build + install to ~/.local/bin + copy skill to pi-skills
 ./run.sh build
