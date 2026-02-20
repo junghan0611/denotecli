@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const Version = "0.2.0"
+
 func main() {
 	if len(os.Args) < 2 {
 		usage()
@@ -22,6 +24,8 @@ func main() {
 		cmdRead()
 	case "tags":
 		cmdTags()
+	case "-V", "--version", "version":
+		fmt.Println("denotecli " + Version)
 	case "-h", "--help", "help":
 		usage()
 	default:
@@ -120,7 +124,7 @@ func fatal(msg string) {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `denotecli - Denote knowledge base CLI for AI agents
+	fmt.Fprintf(os.Stderr, `denotecli %s - Denote knowledge base CLI for AI agents
 
 Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
@@ -136,5 +140,5 @@ Options:
   --limit N         Lines to read (read command, 0=all)
   --pattern PAT     Tag name regex filter (tags command)
   --top N           Top N tags (default: 50)
-`)
+`, Version)
 }
