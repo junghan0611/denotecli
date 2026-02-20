@@ -9,27 +9,16 @@ Search, read, and analyze notes from the user's Denote/org-mode knowledge base (
 
 ## Prerequisites
 
-Binary must be in PATH. Build from source:
-
-```bash
-# Clone (if not already)
-git clone https://github.com/junghan0611/denotecli.git
-cd denotecli
-
-# Build + install to ~/.local/bin
-./run.sh build
-```
-
-Requires Go 1.21+. No external dependencies (stdlib only).
+Binary is bundled in the skill directory. Invoke via `{baseDir}/denotecli`.
 
 ## Commands
 
 ### Search notes
 
 ```bash
-denotecli search "에릭 호퍼" --dirs ~/org --max 5
-denotecli search "emacs" --dirs ~/org --tags emacs
-denotecli search "창조" --dirs ~/org --title-only
+{baseDir}/denotecli search "에릭 호퍼" --dirs ~/org --max 5
+{baseDir}/denotecli search "emacs" --dirs ~/org --tags emacs
+{baseDir}/denotecli search "창조" --dirs ~/org --title-only
 ```
 
 - Multiple words = AND condition (all must match)
@@ -41,8 +30,8 @@ denotecli search "창조" --dirs ~/org --title-only
 ### Read a note
 
 ```bash
-denotecli read 20250314T152111 --dirs ~/org
-denotecli read 20241206T085900 --dirs ~/org --limit 50
+{baseDir}/denotecli read 20250314T152111 --dirs ~/org
+{baseDir}/denotecli read 20241206T085900 --dirs ~/org --limit 50
 ```
 
 Returns full content + parsed frontmatter metadata + outgoing denote links.
@@ -50,8 +39,8 @@ Returns full content + parsed frontmatter metadata + outgoing denote links.
 ### Tag statistics
 
 ```bash
-denotecli tags --dirs ~/org --top 20
-denotecli tags --dirs ~/org --pattern "emacs|vim"
+{baseDir}/denotecli tags --dirs ~/org --top 20
+{baseDir}/denotecli tags --dirs ~/org --pattern "emacs|vim"
 ```
 
 ## Flags
@@ -100,11 +89,11 @@ The knowledge base root differs by environment. Use `--dirs` accordingly:
 | Environment | Root Path | Example |
 |-------------|-----------|---------|
 | **Local** (Claude Code) | `~/org` | `denotecli search "query" --dirs ~/org` |
-| **Container** (OpenClaw) | `~/org` | `denotecli search "query" --dirs ~/org` |
+| **Container** (OpenClaw) | `~/org` | `{baseDir}/denotecli search "query" --dirs ~/org` |
 
 Multiple directories (comma-separated):
 ```bash
-denotecli search "query" --dirs ~/org/notes,~/org/bib,~/org/journal,~/org/llmlog
+{baseDir}/denotecli search "query" --dirs ~/org/notes,~/org/bib,~/org/journal,~/org/llmlog
 ```
 
 ## Knowledge Base Structure
