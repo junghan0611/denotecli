@@ -17,7 +17,7 @@ case "${1:-}" in
         (cd "$SCRIPT_DIR/denotecli" && go build -o "$INSTALL_DIR/denotecli" .)
         echo "Installed: $INSTALL_DIR/denotecli"
         # Install skill to pi-skills
-        SKILL_DIR="$HOME/repos/gh/pi-skills/denote-org"
+        SKILL_DIR="$HOME/repos/gh/pi-skills/denotecli"
         if [[ -d "$HOME/repos/gh/pi-skills" ]]; then
             mkdir -p "$SKILL_DIR"
             cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
