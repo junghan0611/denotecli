@@ -100,11 +100,11 @@ The knowledge base root differs by environment. Use `--dirs` accordingly:
 | Environment | Root Path | Example |
 |-------------|-----------|---------|
 | **Local** (Claude Code) | `~/org` | `denotecli search "query" --dirs ~/org` |
-| **Container** (OpenClaw) | `/data/org` | `denotecli search "query" --dirs /data/org` |
+| **Container** (OpenClaw) | `~/org` | `denotecli search "query" --dirs ~/org` |
 
 Multiple directories (comma-separated):
 ```bash
-denotecli search "query" --dirs /data/org/notes,/data/org/bib,/data/org/journal,/data/org/llmlog
+denotecli search "query" --dirs ~/org/notes,~/org/bib,~/org/journal,~/org/llmlog
 ```
 
 ## Knowledge Base Structure
