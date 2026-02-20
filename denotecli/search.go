@@ -109,7 +109,12 @@ func expandHome(path string) string {
 		if err != nil {
 			return path
 		}
-		return filepath.Join(home, path[2:])
+		path = filepath.Join(home, path[2:])
 	}
-	return path
+	// Resolve symlinks so WalkDir traverses the real directory
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return path
+	}
+	return resolved
 }
