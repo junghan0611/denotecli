@@ -96,7 +96,9 @@ denotecli keyword-map <query> [--dirs DIR,...] [--map-file PATH]
 
 graph, keyword-map 커맨드 사용법 추가.
 
-## br Issues
+## br Issues (prefix: dc)
 
-- orgmode-skills-18y: graph
-- orgmode-skills-8wm: keyword-map
+- dc-279: read --outline
+- dc-2jo: graph
+- dc-28y: keyword-map
+- dc-2u6: 통합 테스트
