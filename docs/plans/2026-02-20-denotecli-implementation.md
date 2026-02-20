@@ -8,6 +8,8 @@
 
 **Tech Stack:** Go 1.21+, stdlib only (encoding/json, regexp, os, path/filepath, strings, fmt, bufio, sort, strconv)
 
+**Critical Edge Case:** Some Denote filenames contain U+00A0 (NO-BREAK SPACE) instead of regular spaces. Example: `20230521T215600--‡\u00a0이맥스__emacs_metameta_texteditor_ritual_workflow_productivity.org`. Go's `strings.Fields()` and `strings.TrimSpace()` treat U+00A0 as whitespace via `unicode.IsSpace()`. The parser regex `(.+?)` handles this correctly, but any string splitting/trimming on titles must NOT use these functions. The Denote ID (`YYYYMMDDTHHMMSS`) is the unique key — if you have the ID, you can always find the file.
+
 ---
 
 ### Task 1: Go module + Denote filename parser
@@ -72,6 +74,14 @@ func TestParseFilename(t *testing.T) {
 			wantID:    "20241127T161109",
 			wantTitle: "llm-대화-로그",
 			wantTags:  []string{"llmlog"},
+			wantOK:    true,
+		},
+		{
+			name:      "NO-BREAK SPACE in title (U+00A0)",
+			filename:  "20230521T215600--\u2021\u00a0이맥스__emacs_metameta_texteditor_ritual_workflow_productivity.org",
+			wantID:    "20230521T215600",
+			wantTitle: "\u2021\u00a0이맥스",
+			wantTags:  []string{"emacs", "metameta", "texteditor", "ritual", "workflow", "productivity"},
 			wantOK:    true,
 		},
 		{
@@ -336,6 +346,8 @@ func setupTestDir(t *testing.T) string {
 			"#+title: 지식 관리 시스템\n#+filetags: :pkm:knowledge:\n#+identifier: 20240601T204208\n\n* PKM\n개인 지식 관리\n"},
 		{"llmlog", "20241127T161109--claude-대화-로그__llmlog.org",
 			"#+title: Claude 대화 로그\n#+filetags: :llmlog:\n#+identifier: 20241127T161109\n\n* 대화\nAI 대화 내용\n"},
+		{"meta", "20230521T215600--\u2021\u00a0이맥스__emacs_metameta_texteditor_ritual_workflow_productivity.org",
+			"#+title: ‡ 이맥스\n#+filetags: :emacs:metameta:texteditor:\n#+identifier: 20230521T215600\n\n* Emacs\n에디터 설정\n"},
 		{"notes", "README.md", "# Not a Denote file\n"},
 	}
 
@@ -350,8 +362,8 @@ func setupTestDir(t *testing.T) string {
 func TestScanDir(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
-	if len(files) != 4 {
-		t.Fatalf("expected 4 denote files, got %d", len(files))
+	if len(files) != 5 {
+		t.Fatalf("expected 5 denote files, got %d", len(files))
 	}
 }
 
@@ -396,6 +408,20 @@ func TestSearchTitleOnly(t *testing.T) {
 	results := Search(files, "emacs", "", true, 20)
 	if len(results) != 1 {
 		t.Fatalf("expected 1, got %d", len(results))
+	}
+}
+
+func TestSearchNBSPTitle(t *testing.T) {
+	dir := setupTestDir(t)
+	files := ScanDirs([]string{dir})
+
+	// Search by Korean part of title containing U+00A0
+	results := Search(files, "이맥스", "", false, 20)
+	if len(results) != 1 {
+		t.Fatalf("expected 1, got %d", len(results))
+	}
+	if results[0].ID != "20230521T215600" {
+		t.Errorf("ID = %q", results[0].ID)
 	}
 }
 
@@ -576,8 +602,8 @@ func TestCollectTags(t *testing.T) {
 	files := ScanDirs([]string{dir})
 
 	stats := CollectTags(files, "", 50)
-	if stats.TotalFiles != 4 {
-		t.Errorf("TotalFiles = %d, want 4", stats.TotalFiles)
+	if stats.TotalFiles != 5 {
+		t.Errorf("TotalFiles = %d, want 5", stats.TotalFiles)
 	}
 	if stats.TotalTags < 5 {
 		t.Errorf("TotalTags = %d, want >= 5", stats.TotalTags)
