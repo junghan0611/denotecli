@@ -1,5 +1,5 @@
 ---
-name: denote-org
+name: denotecli
 description: "Search, read, and analyze 3,000+ Denote/org-mode files. Use when working with ~/org/, Denote files (YYYYMMDDTHHMMSS--title__tags.org), org-mode knowledge bases, or when user asks about notes, journal entries, or bibliography."
 ---
 
