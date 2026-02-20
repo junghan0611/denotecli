@@ -9,11 +9,15 @@ Search, read, and analyze notes from the user's Denote/org-mode knowledge base (
 
 ## Prerequisites
 
-Binary must be built. Build from source:
+Binary must be in PATH. Build from source:
 
 ```bash
-cd /path/to/orgmode-skills/denotecli
-go build -o denotecli .
+# Clone (if not already)
+git clone https://github.com/junghan0611/org-mode-skills.git
+cd org-mode-skills
+
+# Build + install to ~/.local/bin
+./run.sh build
 ```
 
 Requires Go 1.21+. No external dependencies (stdlib only).
