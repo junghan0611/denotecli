@@ -2,6 +2,8 @@
 package main
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -144,6 +146,23 @@ func TestExtractLinks(t *testing.T) {
 	for i, l := range links {
 		if l != want[i] {
 			t.Errorf("links[%d] = %q, want %q", i, l, want[i])
+		}
+	}
+}
+
+func BenchmarkScanDirs(b *testing.B) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		b.Skip("cannot get home dir")
+	}
+	dir := filepath.Join(home, "org")
+	if _, err := os.Stat(dir); err != nil {
+		b.Skip("~/org not found")
+	}
+	for i := 0; i < b.N; i++ {
+		files := ScanDirs([]string{dir})
+		if len(files) < 1000 {
+			b.Fatalf("expected >1000 files, got %d", len(files))
 		}
 	}
 }
