@@ -93,12 +93,28 @@ All output is JSON. Examples:
 - **Frontmatter**: `#+title:`, `#+date:`, `#+filetags:`, `#+identifier:`
 - **Links**: `[[denote:YYYYMMDDTHHMMSS]]`
 
+## Environment Paths
+
+The knowledge base root differs by environment. Use `--dirs` accordingly:
+
+| Environment | Root Path | Example |
+|-------------|-----------|---------|
+| **Local** (Claude Code) | `~/org` | `denotecli search "query" --dirs ~/org` |
+| **Container** (OpenClaw) | `/data/org` | `denotecli search "query" --dirs /data/org` |
+
+Multiple directories (comma-separated):
+```bash
+denotecli search "query" --dirs /data/org/notes,/data/org/bib,/data/org/journal,/data/org/llmlog
+```
+
 ## Knowledge Base Structure
 
 | Directory | Purpose | Scale |
 |-----------|---------|-------|
-| `~/org/notes/` | Main notes | 800+ |
-| `~/org/bib/` | Bibliography | 900+ |
-| `~/org/journal/` | Weekly journals | 600+ |
-| `~/org/llmlog/` | LLM conversation logs | 300+ |
-| `~/org/meta/` | Meta topics | - |
+| `notes/` | Main notes | 800+ |
+| `bib/` | Bibliography | 900+ |
+| `journal/` | Weekly journals | 700+ |
+| `llmlog/` | LLM conversation logs | 300+ |
+| `meta/` | Meta topics | - |
+| `archives/` | Archived notes | - |
+| root `.org` files | diary, tasks, etc. | ~10 |
