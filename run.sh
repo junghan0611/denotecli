@@ -1,20 +1,23 @@
 #!/usr/bin/env bash
-# run.sh — orgmode-skills 프로젝트 메인 진입점
+# run.sh — denotecli 프로젝트 진입점
 #
 # Usage:
-#   ./run.sh build [INSTALL_DIR]   — Build denotecli + install + copy skill
-#   ./run.sh test                  — Run all tests
-#   ./run.sh bench                 — Run benchmarks
+#   ./run.sh build          — Build + install + copy skill
+#   ./run.sh test           — Run all tests
+#   ./run.sh showcase       — Run showcase tests (visual pattern check)
+#   ./run.sh cover          — Run tests with coverage report
+#   ./run.sh bench          — Run benchmarks
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GO_DIR="$SCRIPT_DIR/denotecli"
 
 case "${1:-}" in
     build)
         echo "Building denotecli..."
         INSTALL_DIR="${2:-$HOME/.local/bin}"
         mkdir -p "$INSTALL_DIR"
-        (cd "$SCRIPT_DIR/denotecli" && go build -o "$INSTALL_DIR/denotecli" .)
+        (cd "$GO_DIR" && go build -o "$INSTALL_DIR/denotecli" .)
         echo "Installed: $INSTALL_DIR/denotecli"
         # Install skill to pi-skills
         SKILL_DIR="$HOME/repos/gh/pi-skills/denotecli"
@@ -25,20 +28,36 @@ case "${1:-}" in
         fi
         ;;
     test)
-        echo "Running tests..."
-        (cd "$SCRIPT_DIR/denotecli" && go test -v ./...)
+        echo "Running all tests..."
+        (cd "$GO_DIR" && go test -v -count=1 ./...)
+        ;;
+    showcase)
+        echo "Running showcase (visual pattern check)..."
+        (cd "$GO_DIR" && go test -v -run "TestShowcase" -count=1 ./...)
+        ;;
+    cover)
+        echo "Running coverage..."
+        (cd "$GO_DIR" && go test -cover -coverprofile=cover.out -count=1 ./...)
+        echo ""
+        echo "=== Coverage by function ==="
+        (cd "$GO_DIR" && go tool cover -func=cover.out | grep -v "0.0%" | tail -20)
+        echo ""
+        (cd "$GO_DIR" && go tool cover -func=cover.out | tail -1)
+        rm -f "$GO_DIR/cover.out"
         ;;
     bench)
         echo "Running benchmarks..."
-        (cd "$SCRIPT_DIR/denotecli" && go test -bench=. -benchtime=3s -v)
+        (cd "$GO_DIR" && go test -bench=. -benchtime=3s -v)
         ;;
     -h|--help|help|"")
         cat <<'EOF'
-orgmode-skills — Denote knowledge base CLI
+denotecli — Denote knowledge base CLI for AI agents
 
 Usage:
-  ./run.sh build [DIR]   Build denotecli, install to DIR (default: ~/.local/bin)
-  ./run.sh test          Run all tests
+  ./run.sh build [DIR]   Build + install to DIR (default: ~/.local/bin)
+  ./run.sh test          Run all 82+ tests
+  ./run.sh showcase      Run showcase tests (visual search pattern check)
+  ./run.sh cover         Run tests with coverage report
   ./run.sh bench         Run benchmarks
 EOF
         ;;

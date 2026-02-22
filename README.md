@@ -1,23 +1,72 @@
 # denotecli
 
-**Denote knowledge base CLI for AI agents: search, read, and analyze 3,000+ org-mode notes**
+**Denote knowledge base CLI for AI agents — search, read, analyze, and manage 3,000+ org-mode notes**
 
 > Go stdlib only. Single binary. JSON output. Korean-native.
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
 
 ## What This Does
 
-CLI tool that gives AI agents (Claude Code, OpenClaw, etc.) structured access to a [Denote](https://protesilaos.com/emacs/denote)/org-mode knowledge base. Parses filenames, frontmatter, and inter-note links. Returns JSON.
+CLI that gives AI agents structured access to a [Denote](https://protesilaos.com/emacs/denote)/org-mode knowledge base.
+Not just search — semantic navigation, Korean↔English bridging, tag governance, and knowledge graph traversal.
 
+```bash
+./run.sh build              # Build + install
+./run.sh test               # 82+ tests
+./run.sh showcase           # Visual search pattern check
+./run.sh cover              # Coverage report
 ```
-./run.sh build              # Build + install to ~/.local/bin
-denotecli search "에릭 호퍼"  # Search 3,000+ notes (~16ms)
-denotecli read 20250314T152111  # Read full content + metadata + links
-denotecli tags --top 20     # Tag statistics across all files
+
+---
+
+## Commands (10)
+
+### Search
+
+```bash
+denotecli search "에릭 호퍼" --tags bib --max 5       # title/tag/ID search
+denotecli search-headings "양자역학" --level 1 --max 10 # heading search across all files
+denotecli search-content "LSP 설정" --tags emacs       # full-text grep with tag filter
 ```
+
+### Read
+
+```bash
+denotecli read 20250314T125213 --outline --level 2     # heading structure (TOC)
+denotecli read 20250314T125213 --offset 41 --limit 20  # specific section by line range
+```
+
+### Navigate
+
+```bash
+denotecli graph 20250314T125213                         # outgoing + incoming links
+denotecli keyword-map "이맥스"                          # Korean↔English tag mapping
+denotecli keyword-map "emacs"                           # bidirectional
+```
+
+### Manage
+
+```bash
+denotecli create --title "대화 기록" --tags llmlog,emacs --dir ~/org/llmlog
+denotecli rename-tag --from llms --to llm --dry-run     # batch tag rename (preview)
+denotecli rename-tag --from llms --to llm               # actual rename (filename + frontmatter)
+denotecli tags --top 20                                  # tag statistics
+denotecli tags --suggest                                 # stem-based duplicate detection
+```
+
+---
+
+## Performance
+
+| Command | Scope | Time |
+|---------|-------|------|
+| `search` | 3K files, filenames | ~16ms |
+| `search-headings` | 3K files, 60K headings | ~30ms |
+| `search-content` | 3K files, 14MB text | ~270ms |
+| `keyword-map` | meta notes | ~24ms |
+| `graph` | 3K files, backlink scan | ~85ms |
+| `tags --suggest` | 2K+ tags, Porter stemmer | ~23ms |
 
 ---
 
@@ -26,121 +75,37 @@ denotecli tags --top 20     # Tag statistics across all files
 ```bash
 git clone https://github.com/junghan0611/denotecli.git
 cd denotecli
-./run.sh build    # Builds binary → ~/.local/bin/denotecli
+./run.sh build    # → ~/.local/bin/denotecli
 ```
 
 Requires Go 1.21+. No external dependencies (stdlib only).
 
 ---
 
-## Commands
-
-### search
-
-```bash
-denotecli search "에릭 호퍼" --dirs ~/org --max 5
-denotecli search "emacs" --dirs ~/org --tags emacs
-denotecli search "창조" --dirs ~/org --title-only
-```
-
-- Multiple words = AND (all must match)
-- Searches: Denote ID, title (from filename), tags
-- Case-insensitive (Korean included)
-
-### read
-
-```bash
-denotecli read 20250314T152111 --dirs ~/org
-denotecli read 20241206T085900 --dirs ~/org --limit 50
-denotecli read 20250314T152111 --dirs ~/org --outline
-```
-
-Returns full content + parsed frontmatter + outgoing `[[denote:ID]]` links.
-`--outline` returns only the heading structure (level, title, line number) — use this first to understand document structure before reading specific sections.
-`--level N` filters headings up to level N (0=all).
-
-### search-headings
-
-```bash
-denotecli search-headings "양자역학" --dirs ~/org --max 10
-denotecli search-headings "창조" --dirs ~/org --level 1 --max 5
-```
-
-Searches org headings across ALL files (~3000 files, ~60K headings in ~30ms).
-
-### tags
-
-```bash
-denotecli tags --dirs ~/org --top 20
-denotecli tags --dirs ~/org --pattern "emacs|vim"
-```
-
----
-
 ## Output
 
-All output is JSON:
-
-```json
-// search
-[{"id": "20251107T082610", "title": "제목", "tags": ["tag1"], "date": "2025-11-07", "path": "..."}]
-
-// read
-{"id": "...", "title": "...", "content": "...", "links": ["20240601T204208"]}
-
-// tags
-{"total_files": 2839, "total_tags": 2162, "tags": [{"name": "bib", "count": 966}]}
-```
+All output is JSON. See [SKILL.md](SKILL.md) for detailed examples per command.
 
 ---
 
-## Flags
-
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--dirs DIR,...` | Search directories (comma-separated) | `~/org` |
-| `--tags TAG` | Filter by tag (comma-separated, OR) | all |
-| `--title-only` | Search title field only | false |
-| `--max N` | Max search results | 20 |
-| `--outline` | Show heading structure only | false |
-| `--offset N` | Start line for read | 0 |
-| `--limit N` | Lines to read (0=all) | 0 |
-| `--pattern PAT` | Tag name regex filter | all |
-| `--top N` | Top N tags | 50 |
-
----
-
-## As an AI Skill
-
-### Claude Code
+## Testing
 
 ```bash
-# Option 1: Symlink as skill
-ln -s /path/to/denotecli ~/.claude/skills/denote-org
-
-# Option 2: Use via pi-skills (pre-installed)
-# See https://github.com/junghan0611/pi-skills
+./run.sh test       # All 82+ tests
+./run.sh showcase   # Visual: all search patterns with input→output
+./run.sh cover      # Coverage report (logic functions: 85-100%)
 ```
 
-### OpenClaw / Container
-
-```bash
-denotecli search "query" --dirs /data/org
-```
-
-See [SKILL.md](SKILL.md) for full skill documentation.
-
----
-
-## Denote File Format
+**Showcase tests** (`go test -v -run TestShowcase`) print every search pattern with actual results — makes edge cases visible at a glance:
 
 ```
-YYYYMMDDTHHMMSS--title-with-hyphens__tag1_tag2.org
+=== search patterns ===
+  [한글 다중단어] query="에릭 호퍼" → 1건
+    → 20250314T125213 에릭호퍼-방랑자의-철학 [autobiography,bib,philosophy]
+  [영어 + 태그 필터] query="설정" tags="emacs" → 2건
+    → 20250101T100000 emacs-설정-가이드 [config,emacs]
+    → 20250201T100000 둠이맥스-설정 [config,doomemacs,emacs]
 ```
-
-- **ID** = timestamp (`20250314T152111`) — the unique key for everything
-- **Frontmatter**: `#+title:`, `#+date:`, `#+filetags:`, `#+identifier:`
-- **Links**: `[[denote:YYYYMMDDTHHMMSS]]`
 
 ---
 
@@ -148,19 +113,39 @@ YYYYMMDDTHHMMSS--title-with-hyphens__tag1_tag2.org
 
 ```
 denotecli/
-├── run.sh                 # Build + install entry point
-├── SKILL.md               # AI skill definition (pi-skills compatible)
-├── denotecli/
-│   ├── main.go            # CLI routing (search/read/tags)
-│   ├── parser.go          # Denote filename + frontmatter + link parser
-│   ├── search.go          # Directory scanner + search engine
-│   ├── read.go            # Read by ID with frontmatter enrichment
-│   ├── tags.go            # Tag aggregation + statistics
-│   ├── parser_test.go     # Parser tests (9 cases incl. U+00A0)
-│   ├── search_test.go     # Search tests (7 cases)
-│   └── tags_test.go       # Tags + read tests (4 cases)
-└── docs/                  # Design docs + archive
+├── run.sh                    # Build, test, showcase, cover
+├── SKILL.md                  # AI skill definition (pi-skills compatible)
+├── README.md
+├── docs/
+│   └── obsidian-cli-comparison.md
+└── denotecli/                # Go source (single package)
+    ├── main.go               # CLI routing + flag parsing (329 lines)
+    ├── parser.go             # Denote filename + frontmatter + link parser
+    ├── search.go             # Directory scanner + title/tag search
+    ├── search_headings.go    # Heading search across all files
+    ├── search_content.go     # Full-text content search
+    ├── read.go               # Read by ID + outline extraction
+    ├── graph.go              # Outgoing/incoming link traversal
+    ├── keyword_map.go        # Korean↔English keyword mapping
+    ├── create.go             # Note creation with Denote naming
+    ├── rename_tag.go         # Batch tag rename (filename + frontmatter)
+    ├── tags.go               # Tag statistics
+    ├── tag_suggest.go        # Stem-based duplicate detection
+    ├── stemmer.go            # Porter stemmer (embedded, no deps)
+    ├── *_test.go             # Unit tests per module
+    ├── integration_test.go   # 7 agent workflow scenarios
+    └── showcase_test.go      # Visual search pattern display
 ```
+
+---
+
+## As an AI Skill
+
+See [SKILL.md](SKILL.md) for full skill documentation including:
+- **Why this exists** (beyond rg/fd)
+- **Typical workflow** for agents
+- **All command examples** with JSON output
+- **Flag reference** with applies-to column
 
 ---
 
@@ -168,20 +153,9 @@ denotecli/
 
 | Project | Description |
 |---------|-------------|
-| [pi-skills](https://github.com/junghan0611/pi-skills) | AI skill collection for Claude Code — denotecli is distributed here as a skill |
-| [zotero-config](https://github.com/junghan0611/zotero-config) | Headless Zotero-to-BibTeX workflow + **bibcli** (sister CLI for 8,000+ bibliography entries) |
+| [pi-skills](https://github.com/junghan0611/pi-skills) | AI skill collection — denotecli distributed as a skill |
+| [zotero-config](https://github.com/junghan0611/zotero-config) | Headless Zotero + **bibcli** (sister CLI for 8K+ bibliography) |
 
 ---
 
-## Links
-
-- **Digital Garden**: [notes.junghanacs.com](https://notes.junghanacs.com)
-- **Denote**: [protesilaos.com/emacs/denote](https://protesilaos.com/emacs/denote)
-
----
-
-**Author**: [@junghanacs](https://github.com/junghan0611)
-
-## License
-
-Apache 2.0
+**Author**: [@junghanacs](https://github.com/junghan0611) · **License**: Apache 2.0

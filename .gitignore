@@ -41,3 +41,5 @@ temp/
 .claude
 .agent-shell
 denotecli/denotecli
+cover.out
+*.out
