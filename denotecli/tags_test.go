@@ -10,8 +10,8 @@ func TestCollectTags(t *testing.T) {
 	files := ScanDirs([]string{dir})
 
 	stats := CollectTags(files, "", 50)
-	if stats.TotalFiles != 5 {
-		t.Errorf("TotalFiles = %d, want 5", stats.TotalFiles)
+	if stats.TotalFiles != 6 {
+		t.Errorf("TotalFiles = %d, want 6", stats.TotalFiles)
 	}
 	if stats.TotalTags < 5 {
 		t.Errorf("TotalTags = %d, want >= 5", stats.TotalTags)

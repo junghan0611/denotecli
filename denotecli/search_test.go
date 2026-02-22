@@ -27,6 +27,8 @@ func setupTestDir(t *testing.T) string {
 			"#+title: Claude 대화 로그\n#+filetags: :llmlog:\n#+identifier: 20241127T161109\n\n* 대화\nAI 대화 내용\n"},
 		{"meta", "20230521T215600--\u2021\u00a0이맥스__emacs_metameta_texteditor_ritual_workflow_productivity.org",
 			"#+title: \u2021 이맥스\n#+filetags: :emacs:metameta:texteditor:\n#+identifier: 20230521T215600\n\n* Emacs\n에디터 설정\n"},
+		{"notes", "20260101T120000--다단계-문서-테스트__test_outline.org",
+			"#+title: 다단계 문서 테스트\n#+filetags: :test:outline:\n#+identifier: 20260101T120000\n\n* 1장 서론\n서론 본문\n** 1.1 배경\n배경 설명\n** 1.2 목적 :IMPORTANT:\n목적 설명\n* 2장 본론\n본론 시작\n** 2.1 방법론\n방법론 설명\n*** 2.1.1 세부 방법\n세부 내용\n** 2.2 결과\n결과 설명\n* 3장 결론\n결론 본문\n[[denote:20251107T082610]]\n"},
 		{"notes", "README.md", "# Not a Denote file\n"},
 	}
 
@@ -41,8 +43,8 @@ func setupTestDir(t *testing.T) string {
 func TestScanDir(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
-	if len(files) != 5 {
-		t.Fatalf("expected 5 denote files, got %d", len(files))
+	if len(files) != 6 {
+		t.Fatalf("expected 6 denote files, got %d", len(files))
 	}
 }
 

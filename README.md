@@ -52,9 +52,11 @@ denotecli search "창조" --dirs ~/org --title-only
 ```bash
 denotecli read 20250314T152111 --dirs ~/org
 denotecli read 20241206T085900 --dirs ~/org --limit 50
+denotecli read 20250314T152111 --dirs ~/org --outline
 ```
 
 Returns full content + parsed frontmatter + outgoing `[[denote:ID]]` links.
+`--outline` returns only the heading structure (level, title, line number) — use this first to understand document structure before reading specific sections.
 
 ### tags
 
@@ -90,6 +92,7 @@ All output is JSON:
 | `--tags TAG` | Filter by tag (comma-separated, OR) | all |
 | `--title-only` | Search title field only | false |
 | `--max N` | Max search results | 20 |
+| `--outline` | Show heading structure only | false |
 | `--offset N` | Start line for read | 0 |
 | `--limit N` | Lines to read (0=all) | 0 |
 | `--pattern PAT` | Tag name regex filter | all |

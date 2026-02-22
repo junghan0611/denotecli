@@ -22,6 +22,21 @@ type DenoteContent struct {
 	Links   []string `json:"links"`
 }
 
+// OutlineEntry represents a single org heading.
+type OutlineEntry struct {
+	Level   int    `json:"level"`
+	Title   string `json:"title"`
+	Line    int    `json:"line"`
+	Tags    string `json:"tags,omitempty"`
+}
+
+// DenoteOutline extends DenoteFile with outline (headings only).
+type DenoteOutline struct {
+	DenoteFile
+	Outline []OutlineEntry `json:"outline"`
+	Links   []string       `json:"links"`
+}
+
 // Frontmatter holds parsed org-mode frontmatter fields.
 type Frontmatter struct {
 	Title       string   `json:"title"`

@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const Version = "0.2.0"
+const Version = "0.3.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -58,18 +58,30 @@ func cmdSearch() {
 
 func cmdRead() {
 	if len(os.Args) < 3 {
-		fatal("usage: denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N]")
+		fatal("usage: denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]")
 	}
 	id := os.Args[2]
 	args := os.Args[3:]
 	dirsStr := getFlag(args, "--dirs", "~/org")
+	outline := hasFlag(args, "--outline")
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+
+	if outline {
+		do, err := ReadOutlineByID(files, id)
+		if err != nil {
+			fatal(err.Error())
+		}
+		printJSON(do)
+		return
+	}
+
 	offsetStr := getFlag(args, "--offset", "0")
 	limitStr := getFlag(args, "--limit", "0")
 	offset, _ := strconv.Atoi(offsetStr)
 	limit, _ := strconv.Atoi(limitStr)
 
-	dirs := strings.Split(dirsStr, ",")
-	files := ScanDirs(dirs)
 	dc, err := ReadByID(files, id, offset, limit)
 	if err != nil {
 		fatal(err.Error())
@@ -128,7 +140,7 @@ func usage() {
 
 Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
-  denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N]
+  denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]
   denotecli tags [--pattern PAT] [--top N] [--dirs DIR,...]
 
 Options:
@@ -136,6 +148,7 @@ Options:
   --tags TAG        Filter by tag (comma-separated)
   --title-only      Search title only (search command)
   --max N           Max results (default: 20)
+  --outline         Show heading structure only (read command)
   --offset N        Start line (read command)
   --limit N         Lines to read (read command, 0=all)
   --pattern PAT     Tag name regex filter (tags command)

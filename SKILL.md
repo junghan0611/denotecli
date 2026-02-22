@@ -36,6 +36,16 @@ Binary is bundled in the skill directory. Invoke via `{baseDir}/denotecli`.
 
 Returns full content + parsed frontmatter metadata + outgoing denote links.
 
+### Read outline (headings only)
+
+```bash
+{baseDir}/denotecli read 20250314T152111 --dirs ~/org --outline
+```
+
+Returns org heading structure with level, title, line number, and org tags.
+Use this FIRST before reading full content — lets you see the document structure
+and target specific sections with `--offset`/`--limit`.
+
 ### Tag statistics
 
 ```bash
@@ -51,6 +61,7 @@ Returns full content + parsed frontmatter metadata + outgoing denote links.
 | `--tags TAG` | Filter by tag (comma-separated) | all |
 | `--title-only` | Search title only | false |
 | `--max N` | Max results | search: 20 |
+| `--outline` | Show heading structure only (read) | false |
 | `--offset N` | Start line (read) | 0 |
 | `--limit N` | Lines to read (read, 0=all) | 0 |
 | `--pattern PAT` | Tag regex filter (tags) | all |
@@ -68,6 +79,11 @@ All output is JSON. Examples:
 **read** returns full content:
 ```json
 {"id": "...", "title": "...", "tags": [...], "date": "...", "path": "...", "content": "...", "links": ["20240601T204208"]}
+```
+
+**read --outline** returns heading structure:
+```json
+{"id": "...", "title": "...", "tags": [...], "outline": [{"level": 1, "title": "1장 서론", "line": 5}, {"level": 2, "title": "1.1 배경", "line": 7}], "links": [...]}
 ```
 
 **tags** returns statistics:
