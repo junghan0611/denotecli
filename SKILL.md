@@ -199,7 +199,7 @@ rg and fd can search files. This tool exists for what they can't do:
 - Sorted by combined count (highest impact first)
 
 ```json
-{"total_tags": 2164, "suggestions": [{"tag1": "llm", "count1": 1, "tag2": "llms", "count2": 25, "reason": "plural"}]}
+{"total_tags": 2164, "total_clusters": 75, "clusters": [{"stem": "llm", "tags": [{"name": "llms", "count": 25}, {"name": "llm", "count": 1}], "total": 26}]}
 ```
 
 ## Flags
