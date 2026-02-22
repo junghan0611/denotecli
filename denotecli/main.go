@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -26,6 +27,8 @@ func main() {
 		cmdSearchContent()
 	case "read":
 		cmdRead()
+	case "create":
+		cmdCreate()
 	case "tags":
 		cmdTags()
 	case "-V", "--version", "version":
@@ -58,6 +61,40 @@ func cmdSearch() {
 	files := ScanDirs(dirs)
 	results := Search(files, query, tagFilter, titleOnly, max)
 	printJSON(results)
+}
+
+func cmdCreate() {
+	args := os.Args[2:]
+	title := getFlag(args, "--title", "")
+	if title == "" {
+		fatal("usage: denotecli create --title <title> [--tags TAG,...] [--dir DIR] [--content TEXT]")
+	}
+	tagsStr := getFlag(args, "--tags", "")
+	dir := getFlag(args, "--dir", "~/org/notes")
+	content := getFlag(args, "--content", "")
+
+	var tags []string
+	if tagsStr != "" {
+		for _, t := range strings.Split(tagsStr, ",") {
+			t = strings.TrimSpace(t)
+			if t != "" {
+				tags = append(tags, sanitizeTag(t))
+			}
+		}
+	}
+
+	path, err := CreateNote(dir, title, tags, content)
+	if err != nil {
+		fatal(err.Error())
+	}
+
+	// Read back the created file to return structured JSON
+	df, ok := ParseFilename(filepath.Base(path))
+	if !ok {
+		fatal("parse created filename: " + path)
+	}
+	df.Path = path
+	printJSON(df)
 }
 
 func cmdSearchContent() {
@@ -194,6 +231,7 @@ Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
   denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]
   denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
+  denotecli create --title <title> [--tags TAG,...] [--dir DIR] [--content TEXT]
   denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]
   denotecli tags [--pattern PAT] [--top N] [--dirs DIR,...]
 

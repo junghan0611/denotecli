@@ -41,6 +41,23 @@ All output is JSON.
 [{"id": "20251107T082610", "title": "제목", "tags": ["tag1", "tag2"], "date": "2025-11-07", "path": "/home/..."}]
 ```
 
+### create — create a new Denote note
+
+```bash
+{baseDir}/denotecli create --title "대화 주제" --tags llmlog,topic --dir ~/org/llmlog --content "* 본문\n내용"
+{baseDir}/denotecli create --title "새 노트" --tags emacs
+```
+
+- Auto-generates Denote filename (`YYYYMMDDTHHMMSS--slug__tags.org`) and header
+- Tags are sorted alphabetically, sanitized (lowercase, no special chars)
+- `--dir`: target directory (default: `~/org/notes`)
+- `--content`: optional body text (appended after header)
+- Returns created file metadata as JSON
+
+```json
+{"id": "20260222T185000", "title": "대화-주제", "tags": ["llmlog", "topic"], "date": "2026-02-22", "path": "/home/.../llmlog/20260222T185000--대화-주제__llmlog_topic.org"}
+```
+
 ### search-content — grep full text across all files
 
 ```bash
@@ -116,10 +133,13 @@ All output is JSON.
 
 | Flag | Applies to | Description | Default |
 |------|-----------|-------------|---------|
-| `--dirs DIR,...` | all | Search directories (comma-separated) | `~/org` |
+| `--dirs DIR,...` | search, search-*, read, tags | Search directories (comma-separated) | `~/org` |
+| `--dir DIR` | create | Target directory for new note | `~/org/notes` |
+| `--title TEXT` | create | Note title (required) | — |
+| `--content TEXT` | create | Body content | empty |
 | `--max N` | search, search-headings, search-content | Max results (files) | 20 |
 | `--matches N` | search-content | Max matches per file | 3 |
-| `--tags TAG` | search | Filter by tag (comma-separated, OR) | all |
+| `--tags TAG,...` | search, create | search: filter by tag (OR). create: assign tags | all / none |
 | `--title-only` | search | Search title field only | false |
 | `--level N` | search-headings, read --outline | Max heading level (0=all) | 0 |
 | `--outline` | read | Show heading structure instead of content | false |
