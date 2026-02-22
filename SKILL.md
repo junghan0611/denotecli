@@ -15,10 +15,11 @@ All output is JSON.
 
 ```
 1. search "에릭 호퍼"              → find notes by title/tag (fast, filename-only)
-2. search-headings "창조"          → find topics inside notes (scans all headings)
-3. search-content "양자역학 관찰자"  → grep full text across all files
-4. read <ID> --outline --level 2   → see document structure before reading
-5. read <ID> --offset 41 --limit 20 → read specific section by line range
+2. keyword-map "이맥스"            → Korean↔English keyword mapping (한글→tag)
+3. search-headings "창조"          → find topics inside notes (scans all headings)
+4. search-content "양자역학 관찰자"  → grep full text across all files
+5. read <ID> --outline --level 2   → see document structure before reading
+6. read <ID> --offset 41 --limit 20 → read specific section by line range
 ```
 
 ## Commands
@@ -39,6 +40,22 @@ All output is JSON.
 
 ```json
 [{"id": "20251107T082610", "title": "제목", "tags": ["tag1", "tag2"], "date": "2025-11-07", "path": "/home/..."}]
+```
+
+### keyword-map — Korean↔English keyword mapping
+
+```bash
+{baseDir}/denotecli keyword-map "이맥스" --dirs ~/org
+{baseDir}/denotecli keyword-map "emacs" --dirs ~/org
+{baseDir}/denotecli keyword-map --dirs ~/org --max 100
+```
+
+- Extracts `#한글키워드` from meta note titles, maps to English filename tags
+- Bidirectional: search by Korean keyword OR English tag
+- No query = dump all mappings
+
+```json
+{"total_entries": 1, "entries": [{"keyword": "이맥스", "tags": ["emacs", "productivity", "texteditor"], "note_id": "20230521T215600", "title": "‡ #이맥스"}]}
 ```
 
 ### create — create a new Denote note
