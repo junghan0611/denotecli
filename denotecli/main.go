@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-const Version = "0.3.0"
+const Version = "0.4.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -22,6 +22,8 @@ func main() {
 		cmdSearch()
 	case "search-headings":
 		cmdSearchHeadings()
+	case "search-content":
+		cmdSearchContent()
 	case "read":
 		cmdRead()
 	case "tags":
@@ -55,6 +57,30 @@ func cmdSearch() {
 	dirs := strings.Split(dirsStr, ",")
 	files := ScanDirs(dirs)
 	results := Search(files, query, tagFilter, titleOnly, max)
+	printJSON(results)
+}
+
+func cmdSearchContent() {
+	if len(os.Args) < 3 {
+		fatal("usage: denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]")
+	}
+	query := os.Args[2]
+	args := os.Args[3:]
+	dirsStr := getFlag(args, "--dirs", "~/org")
+	maxStr := getFlag(args, "--max", "20")
+	matchesStr := getFlag(args, "--matches", "3")
+	max, _ := strconv.Atoi(maxStr)
+	matches, _ := strconv.Atoi(matchesStr)
+	if max <= 0 {
+		max = 20
+	}
+	if matches <= 0 {
+		matches = 3
+	}
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+	results := SearchContent(files, query, max, matches)
 	printJSON(results)
 }
 
@@ -166,6 +192,7 @@ func usage() {
 
 Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
+  denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]
   denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
   denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]
   denotecli tags [--pattern PAT] [--top N] [--dirs DIR,...]
@@ -176,6 +203,7 @@ Options:
   --title-only      Search title only (search command)
   --max N           Max results (default: 20)
   --outline         Show heading structure only (read command)
+  --matches N       Max matches per file (search-content, default: 3)
   --level N         Max heading level (outline/search-headings, 0=all)
   --offset N        Start line (read command)
   --limit N         Lines to read (read command, 0=all)

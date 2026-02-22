@@ -1,6 +1,6 @@
 ---
 name: denotecli
-description: "Search, read, and analyze 3,000+ Denote/org-mode notes. Supports title/tag search, heading search across all files, outline extraction, and full content reading. Use when working with ~/org/, Denote files, org-mode knowledge bases, or when user asks about notes, journal entries, or bibliography."
+description: "Search, read, and analyze 3,000+ Denote/org-mode notes. Supports title/tag search, full-text search, heading search, outline extraction, and content reading. Use when working with ~/org/, Denote files, org-mode knowledge bases, or when user asks about notes, journal entries, or bibliography."
 ---
 
 # denotecli — Denote Knowledge Base CLI
@@ -16,8 +16,9 @@ All output is JSON.
 ```
 1. search "에릭 호퍼"              → find notes by title/tag (fast, filename-only)
 2. search-headings "창조"          → find topics inside notes (scans all headings)
-3. read <ID> --outline --level 2   → see document structure before reading
-4. read <ID> --offset 41 --limit 20 → read specific section by line range
+3. search-content "양자역학 관찰자"  → grep full text across all files
+4. read <ID> --outline --level 2   → see document structure before reading
+5. read <ID> --offset 41 --limit 20 → read specific section by line range
 ```
 
 ## Commands
@@ -38,6 +39,22 @@ All output is JSON.
 
 ```json
 [{"id": "20251107T082610", "title": "제목", "tags": ["tag1", "tag2"], "date": "2025-11-07", "path": "/home/..."}]
+```
+
+### search-content — grep full text across all files
+
+```bash
+{baseDir}/denotecli search-content "양자역학 관찰자" --dirs ~/org --max 10
+{baseDir}/denotecli search-content "doom emacs" --dirs ~/org --matches 1
+```
+
+- Full-text search inside all files (~3K files, ~14MB, ~300ms)
+- Multiple words = AND (all must appear on same line)
+- `--matches N`: max matches per file (default: 3, keeps output concise)
+- Snippets trimmed to 200 chars
+
+```json
+[{"id": "...", "title": "...", "tags": [...], "path": "...", "matches": [{"line": 499, "snippet": "...양자역학의 관찰자 효과..."}]}]
 ```
 
 ### search-headings — find topics inside notes
@@ -100,7 +117,8 @@ All output is JSON.
 | Flag | Applies to | Description | Default |
 |------|-----------|-------------|---------|
 | `--dirs DIR,...` | all | Search directories (comma-separated) | `~/org` |
-| `--max N` | search, search-headings | Max results | 20 |
+| `--max N` | search, search-headings, search-content | Max results (files) | 20 |
+| `--matches N` | search-content | Max matches per file | 3 |
 | `--tags TAG` | search | Filter by tag (comma-separated, OR) | all |
 | `--title-only` | search | Search title field only | false |
 | `--level N` | search-headings, read --outline | Max heading level (0=all) | 0 |
