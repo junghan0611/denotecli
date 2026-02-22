@@ -9,7 +9,7 @@ func TestSearchHeadingsBasic(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	results := SearchHeadings(files, "서론", 0, 20)
+	results := SearchHeadings(files, "서론", "", 0, 20)
 	if len(results) != 1 {
 		t.Fatalf("expected 1, got %d", len(results))
 	}
@@ -25,7 +25,7 @@ func TestSearchHeadingsMultiWord(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	results := SearchHeadings(files, "세부 방법", 0, 20)
+	results := SearchHeadings(files, "세부 방법", "", 0, 20)
 	if len(results) != 1 {
 		t.Fatalf("expected 1, got %d", len(results))
 	}
@@ -39,13 +39,13 @@ func TestSearchHeadingsLevelFilter(t *testing.T) {
 	files := ScanDirs([]string{dir})
 
 	// "방법" matches "2.1 방법론" (level 2) and "2.1.1 세부 방법" (level 3)
-	allResults := SearchHeadings(files, "방법", 0, 20)
+	allResults := SearchHeadings(files, "방법", "", 0, 20)
 	if len(allResults) != 2 {
 		t.Fatalf("no level filter: expected 2, got %d", len(allResults))
 	}
 
 	// Level 2 filter should exclude level 3
-	filteredResults := SearchHeadings(files, "방법", 2, 20)
+	filteredResults := SearchHeadings(files, "방법", "", 2, 20)
 	if len(filteredResults) != 1 {
 		t.Fatalf("level 2 filter: expected 1, got %d", len(filteredResults))
 	}
@@ -59,7 +59,7 @@ func TestSearchHeadingsAcrossFiles(t *testing.T) {
 	files := ScanDirs([]string{dir})
 
 	// "본문" appears as heading in 에릭호퍼 file, "본론" in 다단계문서
-	results := SearchHeadings(files, "본", 0, 20)
+	results := SearchHeadings(files, "본", "", 0, 20)
 	if len(results) < 2 {
 		t.Fatalf("expected >= 2, got %d", len(results))
 	}
@@ -77,7 +77,7 @@ func TestSearchHeadingsMaxResults(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	results := SearchHeadings(files, "", 0, 3)
+	results := SearchHeadings(files, "", "", 0, 3)
 	if len(results) != 3 {
 		t.Fatalf("expected 3, got %d", len(results))
 	}
@@ -87,7 +87,7 @@ func TestSearchHeadingsKorean(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	results := SearchHeadings(files, "설정", 0, 20)
+	results := SearchHeadings(files, "설정", "", 0, 20)
 	if len(results) != 1 {
 		t.Fatalf("expected 1, got %d", len(results))
 	}
@@ -100,7 +100,7 @@ func TestSearchHeadingsNoResults(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	results := SearchHeadings(files, "존재하지않는검색어xyz", 0, 20)
+	results := SearchHeadings(files, "존재하지않는검색어xyz", "", 0, 20)
 	if len(results) != 0 {
 		t.Fatalf("expected 0, got %d", len(results))
 	}
@@ -130,5 +130,19 @@ func TestFilterOutlineByLevel(t *testing.T) {
 	r = FilterOutlineByLevel(outline, 2)
 	if len(r) != 3 {
 		t.Errorf("level 2: expected 3, got %d", len(r))
+	}
+}
+
+func TestSearchHeadingsTagFilter(t *testing.T) {
+	dir := setupTestDir(t)
+	files := ScanDirs([]string{dir})
+
+	// Without tag filter
+	all := SearchHeadings(files, "본", "", 0, 20)
+
+	// With tag filter: only test+outline tagged files
+	filtered := SearchHeadings(files, "본", "outline", 0, 20)
+	if len(filtered) >= len(all) {
+		t.Errorf("filtered (%d) should be < all (%d)", len(filtered), len(all))
 	}
 }

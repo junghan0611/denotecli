@@ -13,11 +13,15 @@ type HeadingMatch struct {
 }
 
 // SearchHeadings searches org headings across all files.
-func SearchHeadings(files []DenoteFile, query string, maxLevel int, max int) []HeadingMatch {
+// tagFilter filters files by tag before heading search (comma-separated, OR).
+func SearchHeadings(files []DenoteFile, query string, tagFilter string, maxLevel int, max int) []HeadingMatch {
 	words := splitWords(strings.ToLower(query))
 	var results []HeadingMatch
 
 	for _, f := range files {
+		if tagFilter != "" && !hasTag(f.Tags, tagFilter) {
+			continue
+		}
 		data, err := os.ReadFile(f.Path)
 		if err != nil {
 			continue

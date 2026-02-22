@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.5.0"
+const Version = "0.6.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -143,11 +143,12 @@ func cmdCreate() {
 
 func cmdSearchContent() {
 	if len(os.Args) < 3 {
-		fatal("usage: denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]")
+		fatal("usage: denotecli search-content <query> [--dirs DIR,...] [--tags TAG] [--max N] [--matches N]")
 	}
 	query := os.Args[2]
 	args := os.Args[3:]
 	dirsStr := getFlag(args, "--dirs", "~/org")
+	tagFilter := getFlag(args, "--tags", "")
 	maxStr := getFlag(args, "--max", "20")
 	matchesStr := getFlag(args, "--matches", "3")
 	max, _ := strconv.Atoi(maxStr)
@@ -161,17 +162,18 @@ func cmdSearchContent() {
 
 	dirs := strings.Split(dirsStr, ",")
 	files := ScanDirs(dirs)
-	results := SearchContent(files, query, max, matches)
+	results := SearchContent(files, query, tagFilter, max, matches)
 	printJSON(results)
 }
 
 func cmdSearchHeadings() {
 	if len(os.Args) < 3 {
-		fatal("usage: denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]")
+		fatal("usage: denotecli search-headings <query> [--dirs DIR,...] [--tags TAG] [--level N] [--max N]")
 	}
 	query := os.Args[2]
 	args := os.Args[3:]
 	dirsStr := getFlag(args, "--dirs", "~/org")
+	tagFilter := getFlag(args, "--tags", "")
 	levelStr := getFlag(args, "--level", "0")
 	maxStr := getFlag(args, "--max", "20")
 	level, _ := strconv.Atoi(levelStr)
@@ -182,7 +184,7 @@ func cmdSearchHeadings() {
 
 	dirs := strings.Split(dirsStr, ",")
 	files := ScanDirs(dirs)
-	results := SearchHeadings(files, query, level, max)
+	results := SearchHeadings(files, query, tagFilter, level, max)
 	printJSON(results)
 }
 
@@ -225,15 +227,23 @@ func cmdRead() {
 func cmdTags() {
 	args := os.Args[2:]
 	dirsStr := getFlag(args, "--dirs", "~/org")
+	suggest := hasFlag(args, "--suggest")
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+
+	if suggest {
+		result := SuggestTagCleanup(files)
+		printJSON(result)
+		return
+	}
+
 	pattern := getFlag(args, "--pattern", "")
 	topStr := getFlag(args, "--top", "50")
 	top, _ := strconv.Atoi(topStr)
 	if top <= 0 {
 		top = 50
 	}
-
-	dirs := strings.Split(dirsStr, ",")
-	files := ScanDirs(dirs)
 	stats := CollectTags(files, pattern, top)
 	printJSON(stats)
 }

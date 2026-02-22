@@ -80,7 +80,7 @@ All output is JSON.
 
 ```bash
 {baseDir}/denotecli search-content "양자역학 관찰자" --dirs ~/org --max 10
-{baseDir}/denotecli search-content "doom emacs" --dirs ~/org --matches 1
+{baseDir}/denotecli search-content "LSP 설정" --dirs ~/org --tags emacs --matches 1
 ```
 
 - Full-text search inside all files (~3K files, ~14MB, ~300ms)
@@ -96,7 +96,7 @@ All output is JSON.
 
 ```bash
 {baseDir}/denotecli search-headings "양자역학" --dirs ~/org --max 10
-{baseDir}/denotecli search-headings "창조" --dirs ~/org --level 1 --max 5
+{baseDir}/denotecli search-headings "창조" --dirs ~/org --level 1 --tags bib --max 5
 ```
 
 - Searches org headings (`* heading`) across ALL files (~3K files, ~60K headings, ~30ms)
@@ -160,6 +160,21 @@ All output is JSON.
 {"total_files": 3156, "total_tags": 2162, "tags": [{"name": "bib", "count": 966}, ...]}
 ```
 
+### tags --suggest — find similar/duplicate tags
+
+```bash
+{baseDir}/denotecli tags --suggest --dirs ~/org
+```
+
+- Detects plural duplicates (llm/llms, agent/agents)
+- Detects derivation pairs (communication/communicational)
+- Detects prefix overlaps (emacs/emacsian)
+- Sorted by combined count (highest impact first)
+
+```json
+{"total_tags": 2164, "suggestions": [{"tag1": "llm", "count1": 1, "tag2": "llms", "count2": 25, "reason": "plural"}]}
+```
+
 ## Flags
 
 | Flag | Applies to | Description | Default |
@@ -170,7 +185,7 @@ All output is JSON.
 | `--content TEXT` | create | Body content | empty |
 | `--max N` | search, search-headings, search-content | Max results (files) | 20 |
 | `--matches N` | search-content | Max matches per file | 3 |
-| `--tags TAG,...` | search, create | search: filter by tag (OR). create: assign tags | all / none |
+| `--tags TAG,...` | search, search-content, search-headings, create | Filter/assign by tag (comma, OR) | all / none |
 | `--title-only` | search | Search title field only | false |
 | `--level N` | search-headings, read --outline | Max heading level (0=all) | 0 |
 | `--outline` | read | Show heading structure instead of content | false |
@@ -178,6 +193,7 @@ All output is JSON.
 | `--limit N` | read | Lines to read (0=all) | 0 |
 | `--pattern PAT` | tags | Tag name regex filter | all |
 | `--top N` | tags | Top N tags | 50 |
+| `--suggest` | tags | Show similar/duplicate tag pairs | false |
 
 ## Denote File Format
 

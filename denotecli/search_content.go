@@ -19,7 +19,8 @@ type ContentResult struct {
 }
 
 // SearchContent searches inside file content across all files.
-func SearchContent(files []DenoteFile, query string, max int, matchesPerFile int) []ContentResult {
+// tagFilter filters files by tag before content search (comma-separated, OR).
+func SearchContent(files []DenoteFile, query string, tagFilter string, max int, matchesPerFile int) []ContentResult {
 	words := splitWords(strings.ToLower(query))
 	if len(words) == 0 {
 		return nil
@@ -28,6 +29,9 @@ func SearchContent(files []DenoteFile, query string, max int, matchesPerFile int
 	var results []ContentResult
 
 	for _, f := range files {
+		if tagFilter != "" && !hasTag(f.Tags, tagFilter) {
+			continue
+		}
 		data, err := os.ReadFile(f.Path)
 		if err != nil {
 			continue
