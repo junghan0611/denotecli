@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.4.0"
+const Version = "0.5.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -31,6 +31,8 @@ func main() {
 		cmdCreate()
 	case "keyword-map":
 		cmdKeywordMap()
+	case "graph":
+		cmdGraph()
 	case "tags":
 		cmdTags()
 	case "-V", "--version", "version":
@@ -63,6 +65,23 @@ func cmdSearch() {
 	files := ScanDirs(dirs)
 	results := Search(files, query, tagFilter, titleOnly, max)
 	printJSON(results)
+}
+
+func cmdGraph() {
+	if len(os.Args) < 3 {
+		fatal("usage: denotecli graph <id> [--dirs DIR,...]")
+	}
+	id := os.Args[2]
+	args := os.Args[3:]
+	dirsStr := getFlag(args, "--dirs", "~/org")
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+	result, err := BuildGraph(files, id, 1)
+	if err != nil {
+		fatal(err.Error())
+	}
+	printJSON(result)
 }
 
 func cmdKeywordMap() {
@@ -256,6 +275,7 @@ Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
   denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]
   denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
+  denotecli graph <id> [--dirs DIR,...]
   denotecli keyword-map [query] [--dirs DIR,...] [--max N]
   denotecli create --title <title> [--tags TAG,...] [--dir DIR] [--content TEXT]
   denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]

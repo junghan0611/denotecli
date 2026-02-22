@@ -20,6 +20,7 @@ All output is JSON.
 4. search-content "양자역학 관찰자"  → grep full text across all files
 5. read <ID> --outline --level 2   → see document structure before reading
 6. read <ID> --offset 41 --limit 20 → read specific section by line range
+7. graph <ID>                      → see what links to/from this note
 ```
 
 ## Commands
@@ -133,6 +134,19 @@ All output is JSON.
 
 ```json
 {"id": "...", "title": "...", "tags": [...], "outline": [{"level": 1, "title": "1장 서론", "line": 5}, {"level": 2, "title": "1.1 배경", "line": 7}], "links": [...]}
+```
+
+### graph — outgoing/incoming link traversal
+
+```bash
+{baseDir}/denotecli graph 20250314T125213 --dirs ~/org
+```
+
+- Returns outgoing links (from this note) and incoming links (notes linking to this)
+- Scans all files for incoming backlinks (~85ms for 3K files)
+
+```json
+{"id": "...", "title": "...", "outgoing": [{"source_id": "...", "target_id": "..."}], "incoming": [{"source_id": "...", "source_title": "...", "target_id": "..."}]}
 ```
 
 ### tags — knowledge base overview
