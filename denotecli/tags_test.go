@@ -2,6 +2,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -70,5 +71,39 @@ func TestReadByIDNotFound(t *testing.T) {
 	_, err := ReadByID(files, "99999999T999999", 0, 0)
 	if err == nil {
 		t.Error("expected error for non-existent ID")
+	}
+}
+
+func TestReadByIDOffsetLimit(t *testing.T) {
+	dir := setupTestDir(t)
+	files := ScanDirs([]string{dir})
+
+	// Full read first to know line count
+	full, err := ReadByID(files, "20260101T120000", 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fullLines := len(strings.Split(full.Content, "\n"))
+	if fullLines < 10 {
+		t.Fatalf("expected >= 10 lines, got %d", fullLines)
+	}
+
+	// Read with offset
+	partial, err := ReadByID(files, "20260101T120000", 5, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	partialLines := strings.Split(partial.Content, "\n")
+	if len(partialLines) != 3 {
+		t.Errorf("expected 3 lines, got %d", len(partialLines))
+	}
+
+	// Offset beyond file
+	empty, err := ReadByID(files, "20260101T120000", 9999, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if empty.Content != "" {
+		t.Errorf("expected empty content, got %q", empty.Content)
 	}
 }
