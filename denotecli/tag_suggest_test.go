@@ -5,60 +5,6 @@ import (
 	"testing"
 )
 
-func TestIsSimilarPlural(t *testing.T) {
-	cases := []struct {
-		a, b string
-		want string
-	}{
-		{"apple", "apples", "plural"},
-		{"process", "processes", "plural"},
-		{"strategy", "strategies", "plural"},
-		{"emacs", "vim", ""},
-		{"tag", "tags", "plural"},
-	}
-	for _, c := range cases {
-		got := isSimilar(c.a, c.b)
-		if got != c.want {
-			t.Errorf("isSimilar(%q, %q) = %q, want %q", c.a, c.b, got, c.want)
-		}
-	}
-}
-
-func TestIsSimilarDerivation(t *testing.T) {
-	cases := []struct {
-		a, b string
-		want string
-	}{
-		{"communication", "communicational", "derivation"},
-		{"development", "developmental", "derivation"},
-		// {"creative", "creativity"} — ive→ivity 패턴은 너무 드물어서 미지원
-		{"socialism", "socialist", "derivation"},
-	}
-	for _, c := range cases {
-		got := isSimilar(c.a, c.b)
-		if got != c.want {
-			t.Errorf("isSimilar(%q, %q) = %q, want %q", c.a, c.b, got, c.want)
-		}
-	}
-}
-
-func TestIsSimilarPrefix(t *testing.T) {
-	cases := []struct {
-		a, b string
-		want string
-	}{
-		{"commit", "commits", "plural"}, // caught by plural first
-		{"graph", "graphdb", "prefix"},
-		{"note", "notes", "plural"},
-	}
-	for _, c := range cases {
-		got := isSimilar(c.a, c.b)
-		if got != c.want {
-			t.Errorf("isSimilar(%q, %q) = %q, want %q", c.a, c.b, got, c.want)
-		}
-	}
-}
-
 func TestSuggestTagCleanup(t *testing.T) {
 	files := []DenoteFile{
 		{ID: "1", Tags: []string{"emacs", "vim", "apple", "apples"}},
@@ -67,19 +13,58 @@ func TestSuggestTagCleanup(t *testing.T) {
 	}
 
 	result := SuggestTagCleanup(files)
-	if len(result.Suggestions) == 0 {
-		t.Fatal("expected suggestions")
+	if result.TotalClusters == 0 {
+		t.Fatal("expected clusters")
 	}
 
-	// Should find apple/apples and note/notes at minimum
-	found := map[string]bool{}
-	for _, s := range result.Suggestions {
-		found[s.Tag1+"/"+s.Tag2] = true
+	// Should find apple/apples cluster
+	found := false
+	for _, c := range result.Clusters {
+		for _, tag := range c.Tags {
+			if tag.Name == "apple" || tag.Name == "apples" {
+				found = true
+			}
+		}
 	}
-	if !found["apple/apples"] {
-		t.Error("missing apple/apples suggestion")
+	if !found {
+		t.Error("missing apple/apples cluster")
 	}
-	if !found["note/notes"] {
-		t.Error("missing note/notes suggestion")
+}
+
+func TestSuggestTagCleanupStemBased(t *testing.T) {
+	// communicate/communication/communicational should all cluster
+	files := []DenoteFile{
+		{ID: "1", Tags: []string{"communicate"}},
+		{ID: "2", Tags: []string{"communication"}},
+		{ID: "3", Tags: []string{"communicational"}},
+	}
+
+	result := SuggestTagCleanup(files)
+	found := false
+	for _, c := range result.Clusters {
+		if len(c.Tags) == 3 {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("expected 3-tag cluster for communicate variants")
+	}
+}
+
+func TestSuggestTagCleanupIntentional(t *testing.T) {
+	// emacs + emacslisp should be filtered as intentional
+	files := []DenoteFile{
+		{ID: "1", Tags: []string{"emacs"}},
+		{ID: "2", Tags: []string{"emacs"}},
+		{ID: "3", Tags: []string{"emacslisp"}},
+	}
+
+	result := SuggestTagCleanup(files)
+	for _, c := range result.Clusters {
+		for _, tag := range c.Tags {
+			if tag.Name == "emacslisp" {
+				t.Error("emacslisp should be filtered as intentional compound")
+			}
+		}
 	}
 }

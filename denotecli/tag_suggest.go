@@ -6,22 +6,27 @@ import (
 	"strings"
 )
 
-// TagPair represents two similar tags that might be duplicates.
-type TagPair struct {
-	Tag1  string `json:"tag1"`
-	Count1 int   `json:"count1"`
-	Tag2  string `json:"tag2"`
-	Count2 int   `json:"count2"`
-	Reason string `json:"reason"`
+// TagCluster represents a group of tags sharing the same stem.
+type TagCluster struct {
+	Stem    string        `json:"stem"`
+	Tags    []TagWithCount `json:"tags"`
+	Total   int           `json:"total"`
+}
+
+// TagWithCount is a tag with its file count.
+type TagWithCount struct {
+	Name  string `json:"name"`
+	Count int    `json:"count"`
 }
 
 // TagSuggestResult holds tag cleanup suggestions.
 type TagSuggestResult struct {
-	TotalTags   int       `json:"total_tags"`
-	Suggestions []TagPair `json:"suggestions"`
+	TotalTags    int          `json:"total_tags"`
+	TotalClusters int         `json:"total_clusters"`
+	Clusters     []TagCluster `json:"clusters"`
 }
 
-// SuggestTagCleanup finds potentially duplicate/similar tags.
+// SuggestTagCleanup groups tags by stem to find duplicates.
 func SuggestTagCleanup(files []DenoteFile) TagSuggestResult {
 	// Count tags
 	counts := make(map[string]int)
@@ -31,91 +36,69 @@ func SuggestTagCleanup(files []DenoteFile) TagSuggestResult {
 		}
 	}
 
-	// Collect sorted tag list
-	var tags []string
-	for t := range counts {
-		tags = append(tags, t)
+	// Group by stem
+	stemGroups := make(map[string][]TagWithCount)
+	for tag, count := range counts {
+		stem := Stem(tag)
+		stemGroups[stem] = append(stemGroups[stem], TagWithCount{Name: tag, Count: count})
 	}
-	sort.Strings(tags)
 
-	var suggestions []TagPair
-
-	for i := 0; i < len(tags); i++ {
-		for j := i + 1; j < len(tags); j++ {
-			a, b := tags[i], tags[j]
-			if reason := isSimilar(a, b); reason != "" {
-				suggestions = append(suggestions, TagPair{
-					Tag1: a, Count1: counts[a],
-					Tag2: b, Count2: counts[b],
-					Reason: reason,
-				})
-			}
+	// Only keep clusters with 2+ tags (these are the duplicates)
+	var clusters []TagCluster
+	for stem, tags := range stemGroups {
+		if len(tags) < 2 {
+			continue
 		}
+		// Sort tags within cluster by count desc
+		sort.Slice(tags, func(i, j int) bool {
+			return tags[i].Count > tags[j].Count
+		})
+		total := 0
+		for _, t := range tags {
+			total += t.Count
+		}
+		clusters = append(clusters, TagCluster{
+			Stem:  stem,
+			Tags:  tags,
+			Total: total,
+		})
 	}
 
-	// Sort by combined count (higher = more impactful to fix)
-	sort.Slice(suggestions, func(i, j int) bool {
-		ci := suggestions[i].Count1 + suggestions[i].Count2
-		cj := suggestions[j].Count1 + suggestions[j].Count2
-		return ci > cj
+	// Sort clusters by total count desc (highest impact first)
+	sort.Slice(clusters, func(i, j int) bool {
+		return clusters[i].Total > clusters[j].Total
 	})
 
+	// Filter out clusters where all tags share obvious compound prefixes
+	// (e.g. emacs/emacslisp are intentionally different)
+	var filtered []TagCluster
+	for _, c := range clusters {
+		if isIntentionalCluster(c) {
+			continue
+		}
+		filtered = append(filtered, c)
+	}
+
 	return TagSuggestResult{
-		TotalTags:   len(tags),
-		Suggestions: suggestions,
+		TotalTags:     len(counts),
+		TotalClusters: len(filtered),
+		Clusters:      filtered,
 	}
 }
 
-// isSimilar checks if two tags are likely duplicates.
-func isSimilar(a, b string) string {
-	// Exact plural: tag vs tags
-	if a+"s" == b || b+"s" == a {
-		return "plural"
+// isIntentionalCluster checks if a cluster is likely intentional (not a mistake).
+// Tags that are clearly compound words (emacs + emacslisp) are not duplicates.
+func isIntentionalCluster(c TagCluster) bool {
+	if len(c.Tags) != 2 {
+		return false
 	}
-	// -es plural: process vs processes
-	if a+"es" == b || b+"es" == a {
-		return "plural"
+	a, b := c.Tags[0].Name, c.Tags[1].Name
+	// If one fully contains the other AND the suffix is a meaningful word (>3 chars)
+	if strings.HasPrefix(b, a) && len(b)-len(a) > 3 {
+		return true
 	}
-	// -ies plural: strategy vs strategies (after stripping)
-	if strings.HasSuffix(a, "y") && strings.TrimSuffix(a, "y")+"ies" == b {
-		return "plural"
-	}
-	if strings.HasSuffix(b, "y") && strings.TrimSuffix(b, "y")+"ies" == a {
-		return "plural"
-	}
-
-	// Common suffix variations: -tion/-tional, -ment/-mental, -ity/-ive
-	stems := [][2]string{
-		{"tion", "tional"}, {"ment", "mental"},
-		{"ity", "ive"}, {"ism", "ist"},
-		{"ing", ""}, {"tion", "te"},
-		{"ence", "ent"}, {"ance", "ant"},
-	}
-	for _, pair := range stems {
-		if swapSuffix(a, b, pair[0], pair[1]) || swapSuffix(b, a, pair[0], pair[1]) {
-			return "derivation"
-		}
-	}
-
-	// Prefix containment: if one is prefix of other and diff <= 3 chars
-	if len(a) > 3 && len(b) > 3 {
-		if strings.HasPrefix(b, a) && len(b)-len(a) <= 3 {
-			return "prefix"
-		}
-		if strings.HasPrefix(a, b) && len(a)-len(b) <= 3 {
-			return "prefix"
-		}
-	}
-
-	return ""
-}
-
-func swapSuffix(a, b, suf1, suf2 string) bool {
-	if strings.HasSuffix(a, suf1) {
-		stem := strings.TrimSuffix(a, suf1)
-		if stem+suf2 == b {
-			return true
-		}
+	if strings.HasPrefix(a, b) && len(a)-len(b) > 3 {
+		return true
 	}
 	return false
 }
