@@ -20,6 +20,8 @@ func main() {
 	switch os.Args[1] {
 	case "search":
 		cmdSearch()
+	case "search-headings":
+		cmdSearchHeadings()
 	case "read":
 		cmdRead()
 	case "tags":
@@ -56,6 +58,27 @@ func cmdSearch() {
 	printJSON(results)
 }
 
+func cmdSearchHeadings() {
+	if len(os.Args) < 3 {
+		fatal("usage: denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]")
+	}
+	query := os.Args[2]
+	args := os.Args[3:]
+	dirsStr := getFlag(args, "--dirs", "~/org")
+	levelStr := getFlag(args, "--level", "0")
+	maxStr := getFlag(args, "--max", "20")
+	level, _ := strconv.Atoi(levelStr)
+	max, _ := strconv.Atoi(maxStr)
+	if max <= 0 {
+		max = 20
+	}
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+	results := SearchHeadings(files, query, level, max)
+	printJSON(results)
+}
+
 func cmdRead() {
 	if len(os.Args) < 3 {
 		fatal("usage: denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]")
@@ -69,10 +92,13 @@ func cmdRead() {
 	files := ScanDirs(dirs)
 
 	if outline {
+		levelStr := getFlag(args, "--level", "0")
+		level, _ := strconv.Atoi(levelStr)
 		do, err := ReadOutlineByID(files, id)
 		if err != nil {
 			fatal(err.Error())
 		}
+		do.Outline = FilterOutlineByLevel(do.Outline, level)
 		printJSON(do)
 		return
 	}
@@ -140,6 +166,7 @@ func usage() {
 
 Usage:
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
+  denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
   denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]
   denotecli tags [--pattern PAT] [--top N] [--dirs DIR,...]
 
@@ -149,6 +176,7 @@ Options:
   --title-only      Search title only (search command)
   --max N           Max results (default: 20)
   --outline         Show heading structure only (read command)
+  --level N         Max heading level (outline/search-headings, 0=all)
   --offset N        Start line (read command)
   --limit N         Lines to read (read command, 0=all)
   --pattern PAT     Tag name regex filter (tags command)

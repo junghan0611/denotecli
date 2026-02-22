@@ -40,11 +40,24 @@ Returns full content + parsed frontmatter metadata + outgoing denote links.
 
 ```bash
 {baseDir}/denotecli read 20250314T152111 --dirs ~/org --outline
+{baseDir}/denotecli read 20250314T152111 --dirs ~/org --outline --level 2
 ```
 
 Returns org heading structure with level, title, line number, and org tags.
 Use this FIRST before reading full content — lets you see the document structure
 and target specific sections with `--offset`/`--limit`.
+`--level N` filters headings up to level N (0=all, default).
+
+### Search headings (across all files)
+
+```bash
+{baseDir}/denotecli search-headings "양자역학" --dirs ~/org --max 10
+{baseDir}/denotecli search-headings "창조" --dirs ~/org --level 1 --max 5
+```
+
+Searches org headings across ALL files (~3000 files, ~60K headings in ~30ms).
+Returns matching headings with file metadata + line number.
+`--level N` limits search to headings up to level N.
 
 ### Tag statistics
 
@@ -62,6 +75,7 @@ and target specific sections with `--offset`/`--limit`.
 | `--title-only` | Search title only | false |
 | `--max N` | Max results | search: 20 |
 | `--outline` | Show heading structure only (read) | false |
+| `--level N` | Max heading level (outline/search-headings) | 0 (all) |
 | `--offset N` | Start line (read) | 0 |
 | `--limit N` | Lines to read (read, 0=all) | 0 |
 | `--pattern PAT` | Tag regex filter (tags) | all |
@@ -84,6 +98,11 @@ All output is JSON. Examples:
 **read --outline** returns heading structure:
 ```json
 {"id": "...", "title": "...", "tags": [...], "outline": [{"level": 1, "title": "1장 서론", "line": 5}, {"level": 2, "title": "1.1 배경", "line": 7}], "links": [...]}
+```
+
+**search-headings** returns matched headings with file info:
+```json
+[{"id": "...", "title": "...", "tags": [...], "path": "...", "heading": {"level": 1, "title": "양자역학의 해석", "line": 23}}]
 ```
 
 **tags** returns statistics:

@@ -92,6 +92,20 @@ func ExtractOutline(content string) []OutlineEntry {
 	return outline
 }
 
+// FilterOutlineByLevel returns only headings up to maxLevel. 0 = no filter.
+func FilterOutlineByLevel(outline []OutlineEntry, maxLevel int) []OutlineEntry {
+	if maxLevel <= 0 {
+		return outline
+	}
+	var filtered []OutlineEntry
+	for _, e := range outline {
+		if e.Level <= maxLevel {
+			filtered = append(filtered, e)
+		}
+	}
+	return filtered
+}
+
 // ReadOutlineByID returns just the heading structure of a note.
 func ReadOutlineByID(files []DenoteFile, id string) (DenoteOutline, error) {
 	for _, f := range files {
