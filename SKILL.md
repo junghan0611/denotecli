@@ -11,6 +11,17 @@ Binary is bundled in the skill directory. Invoke via `{baseDir}/denotecli`.
 
 All output is JSON.
 
+## Why This Exists (not just rg/fd)
+
+rg and fd can search files. This tool exists for what they can't do:
+
+1. **Structured access** — Denote ID, frontmatter, tags, links parsed into JSON. Agent can reason about metadata, not just grep text.
+2. **Heading-aware navigation** — Org-mode headings are the document's semantic units. `search-headings` and `read --outline` let the agent navigate by meaning, not line count.
+3. **Korean↔English bridging** — The user thinks in Korean but tags in English. `keyword-map` translates between them. The user knows 한글 terms for everything but may not know the English academic term for fields outside tech.
+4. **Tag governance** — English tags are the controlled vocabulary. `tags --suggest` uses stemming to find duplicates (llm/llms, agent/agents). `rename-tag` batch-fixes them across 3000+ files. Fewer tags = less complexity.
+5. **Graph traversal** — `[[denote:ID]]` links form a knowledge graph. `graph` reveals what connects to what — no separate DB needed, the files ARE the graph.
+6. **Agent as tag enricher** — The user is a polymath (philosophy, physics, art, tech...) who may not know the English term for concepts outside their speciality. The agent can read notes, understand content, and suggest proper English tags that map to universal knowledge categories. This is the long-term value: the agent completes what the human started.
+
 ## Typical Workflow
 
 ```
@@ -160,6 +171,22 @@ All output is JSON.
 {"total_files": 3156, "total_tags": 2162, "tags": [{"name": "bib", "count": 966}, ...]}
 ```
 
+### rename-tag — batch rename a tag across all files
+
+```bash
+{baseDir}/denotecli rename-tag --from apples --to apple --dirs ~/org --dry-run
+{baseDir}/denotecli rename-tag --from llms --to llm --dirs ~/org
+```
+
+- Renames tag in both filename AND `#+filetags:` frontmatter
+- Tags re-sorted alphabetically after rename (matches Denote convention)
+- Handles merge: if file already has new tag, deduplicates
+- `--dry-run`: preview which files would change without modifying
+
+```json
+{"old_tag": "apples", "new_tag": "apple", "modified": 25, "files": [...], "dry_run": false}
+```
+
 ### tags --suggest — find similar/duplicate tags
 
 ```bash
@@ -193,7 +220,10 @@ All output is JSON.
 | `--limit N` | read | Lines to read (0=all) | 0 |
 | `--pattern PAT` | tags | Tag name regex filter | all |
 | `--top N` | tags | Top N tags | 50 |
-| `--suggest` | tags | Show similar/duplicate tag pairs | false |
+| `--suggest` | tags | Show similar/duplicate tag clusters | false |
+| `--from TAG` | rename-tag | Tag to rename from (required) | — |
+| `--to TAG` | rename-tag | Tag to rename to (required) | — |
+| `--dry-run` | rename-tag | Preview without modifying files | false |
 
 ## Denote File Format
 

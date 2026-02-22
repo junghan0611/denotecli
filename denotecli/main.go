@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.6.0"
+const Version = "0.7.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -33,6 +33,8 @@ func main() {
 		cmdKeywordMap()
 	case "graph":
 		cmdGraph()
+	case "rename-tag":
+		cmdRenameTag()
 	case "tags":
 		cmdTags()
 	case "-V", "--version", "version":
@@ -224,6 +226,25 @@ func cmdRead() {
 	printJSON(dc)
 }
 
+func cmdRenameTag() {
+	args := os.Args[2:]
+	oldTag := getFlag(args, "--from", "")
+	newTag := getFlag(args, "--to", "")
+	if oldTag == "" || newTag == "" {
+		fatal("usage: denotecli rename-tag --from <old> --to <new> [--dirs DIR,...] [--dry-run]")
+	}
+	dirsStr := getFlag(args, "--dirs", "~/org")
+	dryRun := hasFlag(args, "--dry-run")
+
+	dirs := strings.Split(dirsStr, ",")
+	files := ScanDirs(dirs)
+	result, err := RenameTag(files, oldTag, newTag, dryRun)
+	if err != nil {
+		fatal(err.Error())
+	}
+	printJSON(result)
+}
+
 func cmdTags() {
 	args := os.Args[2:]
 	dirsStr := getFlag(args, "--dirs", "~/org")
@@ -289,7 +310,8 @@ Usage:
   denotecli keyword-map [query] [--dirs DIR,...] [--max N]
   denotecli create --title <title> [--tags TAG,...] [--dir DIR] [--content TEXT]
   denotecli read <id> [--dirs DIR,...] [--offset N] [--limit N] [--outline]
-  denotecli tags [--pattern PAT] [--top N] [--dirs DIR,...]
+  denotecli rename-tag --from <old> --to <new> [--dirs DIR,...] [--dry-run]
+  denotecli tags [--pattern PAT] [--top N] [--suggest] [--dirs DIR,...]
 
 Options:
   --dirs DIR,...    Search directories, comma-separated (default: ~/org)
