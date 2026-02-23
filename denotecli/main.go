@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const Version = "0.7.0"
+const Version = "0.8.0"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -19,6 +20,8 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "day":
+		cmdDayQuery()
 	case "search":
 		cmdSearch()
 	case "search-headings":
@@ -46,6 +49,27 @@ func main() {
 		usage()
 		os.Exit(1)
 	}
+}
+
+func cmdDayQuery() {
+	args := os.Args[2:]
+	date := ""
+	if len(os.Args) >= 3 && !strings.HasPrefix(os.Args[2], "--") {
+		date = os.Args[2]
+		args = os.Args[3:]
+	}
+	dirsStr := getFlag(args, "--dirs", "~/org")
+	yearsAgo := getFlag(args, "--years-ago", "")
+	daysAgo := getFlag(args, "--days-ago", "")
+
+	resolved, err := resolveDayDate(date, yearsAgo, daysAgo)
+	if err != nil {
+		fatal(err.Error())
+	}
+
+	dirs := strings.Split(dirsStr, ",")
+	result := QueryDay(dirs, resolved)
+	printJSON(result)
 }
 
 func cmdSearch() {
@@ -269,6 +293,42 @@ func cmdTags() {
 	printJSON(stats)
 }
 
+func resolveDayDate(date, yearsAgo, daysAgo string) (string, error) {
+	now := time.Now()
+	if yearsAgo != "" {
+		n, err := strconv.Atoi(yearsAgo)
+		if err != nil || n < 0 {
+			return "", fmt.Errorf("invalid --years-ago: %s", yearsAgo)
+		}
+		return now.AddDate(-n, 0, 0).Format("2006-01-02"), nil
+	}
+	if daysAgo != "" {
+		n, err := strconv.Atoi(daysAgo)
+		if err != nil || n < 0 {
+			return "", fmt.Errorf("invalid --days-ago: %s", daysAgo)
+		}
+		return now.AddDate(0, 0, -n).Format("2006-01-02"), nil
+	}
+	if date == "" {
+		return now.Format("2006-01-02"), nil
+	}
+	// YYYYMMDD → YYYY-MM-DD
+	if len(date) == 8 && !strings.Contains(date, "-") {
+		return date[:4] + "-" + date[4:6] + "-" + date[6:8], nil
+	}
+	// YYYYMMDDT... (Denote ID)
+	if len(date) >= 8 && strings.Contains(date, "T") {
+		d := date[:strings.Index(date, "T")]
+		if len(d) == 8 {
+			return d[:4] + "-" + d[4:6] + "-" + d[6:8], nil
+		}
+	}
+	if len(date) == 10 && date[4] == '-' && date[7] == '-' {
+		return date, nil
+	}
+	return "", fmt.Errorf("unrecognized date format: %s", date)
+}
+
 func getFlag(args []string, name string, def string) string {
 	for i, arg := range args {
 		if arg == name && i+1 < len(args) {
@@ -303,6 +363,7 @@ func usage() {
 	fmt.Fprintf(os.Stderr, `denotecli %s - Denote knowledge base CLI for AI agents
 
 Usage:
+  denotecli day [DATE] [--dirs DIR,...] [--years-ago N] [--days-ago N]
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
   denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]
   denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
