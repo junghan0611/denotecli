@@ -25,16 +25,64 @@ rg and fd can search files. This tool exists for what they can't do:
 ## Typical Workflow
 
 ```
-1. search "에릭 호퍼"              → find notes by title/tag (fast, filename-only)
-2. keyword-map "이맥스"            → Korean↔English keyword mapping (한글→tag)
-3. search-headings "창조"          → find topics inside notes (scans all headings)
-4. search-content "양자역학 관찰자"  → grep full text across all files
-5. read <ID> --outline --level 2   → see document structure before reading
+1. day 2023-02-22                  → 특정 날짜의 저널/노트/datetree 전체 조회
+2. day --years-ago 3               → N년 전 오늘의 모든 기록
+3. search "에릭 호퍼"              → find notes by title/tag (fast, filename-only)
+4. keyword-map "이맥스"            → Korean↔English keyword mapping (한글→tag)
+5. search-headings "창조"          → find topics inside notes (scans all headings)
+6. search-content "양자역학 관찰자"  → grep full text across all files
+7. read <ID> --outline --level 2   → see document structure before reading
 6. read <ID> --offset 41 --limit 20 → read specific section by line range
 7. graph <ID>                      → see what links to/from this note
 ```
 
 ## Commands
+
+### day — 특정 날짜의 저널/노트 통합 조회
+
+```bash
+{baseDir}/denotecli day 2023-02-22           # 특정 날짜
+{baseDir}/denotecli day --years-ago 3        # 3년 전 오늘
+{baseDir}/denotecli day --days-ago 7         # 7일 전
+{baseDir}/denotecli day 20230222             # Denote ID 호환
+```
+
+3개 소스를 통합:
+1. **journal/** — daily(archive/일반) 또는 weekly 파일에서 시간 엔트리 추출
+2. **diary.org** — datetree 구조에서 CLOCK duration 포함 엔트리
+3. **당일 노트** — Denote ID가 해당 날짜로 시작하는 모든 파일
+
+```json
+{
+  "date": "2023-02-22",
+  "day_of_week": "Wednesday",
+  "years_ago": 3,
+  "journal": {"source": "...", "format": "daily-archive", "entries": [{"time": "06:20", "text": "기상"}]},
+  "datetree": {"source": "...", "entries": [{"time": "07:45", "text": "등원", "clock": "0:01"}]},
+  "notes_created": [{"id": "20230222T...", "title": "...", "tags": [...]}]
+}
+```
+
+**day-query 스킬과 연동**: gitcli day, lifetract read와 함께 호출하면 날짜 기반 통합 뷰 완성.
+
+### timeline-journal — 월간 저널 활동 개요
+
+```bash
+{baseDir}/denotecli timeline-journal --month 2023-02
+{baseDir}/denotecli timeline-journal --from 2023-02-01 --to 2023-02-28
+```
+
+날짜별 엔트리 수, 소스(journal/datetree), 생성 노트 수를 한눈에.
+
+```json
+{
+  "period": "2023-02-01 ~ 2023-02-28",
+  "total_days": 28, "active_days": 28,
+  "days": [
+    {"date": "2023-02-01", "day_of_week": "Wednesday", "sources": ["journal","datetree"], "journal_count": 12, "datetree_count": 4, "notes_count": 0}
+  ]
+}
+```
 
 ### search — find notes by title, tag, ID
 
