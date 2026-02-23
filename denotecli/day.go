@@ -14,10 +14,10 @@ import (
 type DayResult struct {
 	Date         string        `json:"date"`
 	DayOfWeek    string        `json:"day_of_week"`
-	YearsAgo     int           `json:"years_ago,omitempty"`
-	Journal      *JournalData  `json:"journal,omitempty"`
-	Datetree     *DatetreeData `json:"datetree,omitempty"`
-	NotesCreated []DenoteFile  `json:"notes_created,omitempty"`
+	YearsAgo     int           `json:"years_ago"`
+	Journal      *JournalData  `json:"journal"`
+	Datetree     *DatetreeData `json:"datetree"`
+	NotesCreated []DenoteFile  `json:"notes_created"`
 }
 
 // JournalData holds parsed journal entries for a day.
@@ -57,8 +57,9 @@ func QueryDay(dirs []string, dateStr string) DayResult {
 	}
 
 	result := DayResult{
-		Date:      dateStr,
-		DayOfWeek: t.Weekday().String(),
+		Date:         dateStr,
+		DayOfWeek:    t.Weekday().String(),
+		NotesCreated: []DenoteFile{},
 	}
 
 	// Calculate years ago
