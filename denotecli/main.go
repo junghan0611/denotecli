@@ -22,6 +22,8 @@ func main() {
 	switch os.Args[1] {
 	case "day":
 		cmdDayQuery()
+	case "timeline-journal":
+		cmdTimelineJournal()
 	case "search":
 		cmdSearch()
 	case "search-headings":
@@ -69,6 +71,18 @@ func cmdDayQuery() {
 
 	dirs := strings.Split(dirsStr, ",")
 	result := QueryDay(dirs, resolved)
+	printJSON(result)
+}
+
+func cmdTimelineJournal() {
+	args := os.Args[2:]
+	dirsStr := getFlag(args, "--dirs", "~/org")
+	month := getFlag(args, "--month", "")
+	from := getFlag(args, "--from", "")
+	to := getFlag(args, "--to", "")
+
+	dirs := strings.Split(dirsStr, ",")
+	result := QueryTimelineJournal(dirs, month, from, to)
 	printJSON(result)
 }
 
@@ -364,6 +378,7 @@ func usage() {
 
 Usage:
   denotecli day [DATE] [--dirs DIR,...] [--years-ago N] [--days-ago N]
+  denotecli timeline-journal [--month YYYY-MM] [--from DATE] [--to DATE] [--dirs DIR,...]
   denotecli search <query> [--tags TAG] [--dirs DIR,...] [--title-only] [--max N]
   denotecli search-content <query> [--dirs DIR,...] [--max N] [--matches N]
   denotecli search-headings <query> [--dirs DIR,...] [--level N] [--max N]
