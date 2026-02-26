@@ -21,15 +21,7 @@ case "${1:-}" in
         (cd "$GO_DIR" && GOOS=linux GOARCH=arm64 go build -o "$INSTALL_DIR/denotecli-linux-arm64" .)
         echo "Installed: $INSTALL_DIR/denotecli ($(uname -m))"
         echo "Installed: $INSTALL_DIR/denotecli-linux-arm64 (aarch64)"
-        # Install skill to pi-skills (SKILL.md + binary)
-        SKILL_DIR="$HOME/repos/gh/pi-skills/denotecli"
-        if [[ -d "$HOME/repos/gh/pi-skills" ]]; then
-            mkdir -p "$SKILL_DIR"
-            cp "$SCRIPT_DIR/SKILL.md" "$SKILL_DIR/SKILL.md"
-            cp "$INSTALL_DIR/denotecli" "$SKILL_DIR/denotecli"
-            cp "$INSTALL_DIR/denotecli-linux-arm64" "$SKILL_DIR/denotecli-linux-arm64"
-            echo "Skill installed: $SKILL_DIR/ (SKILL.md + x86_64 + arm64)"
-        fi
+        echo "Skill docs: https://github.com/junghan0611/pi-skills/tree/main/denotecli"
         ;;
     test)
         echo "Running all tests..."

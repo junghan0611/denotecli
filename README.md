@@ -4,6 +4,8 @@
 
 > Go stdlib only. Single binary. JSON output. Korean-native.
 
+> **AI Agent Skill**: [pi-skills/denotecli](https://github.com/junghan0611/pi-skills/tree/main/denotecli) — 에이전트용 스킬 문서는 pi-skills 리포에서 관리합니다.
+
 ---
 
 ## What This Does
