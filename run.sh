@@ -15,13 +15,11 @@ GO_DIR="$SCRIPT_DIR/denotecli"
 case "${1:-}" in
     build)
         echo "Building denotecli..."
-        INSTALL_DIR="${2:-$HOME/.local/bin}"
+        INSTALL_DIR="${2:-$GO_DIR}"
         mkdir -p "$INSTALL_DIR"
-        (cd "$GO_DIR" && go build -o "$INSTALL_DIR/denotecli" .)
-        (cd "$GO_DIR" && GOOS=linux GOARCH=arm64 go build -o "$INSTALL_DIR/denotecli-linux-arm64" .)
-        echo "Installed: $INSTALL_DIR/denotecli ($(uname -m))"
-        echo "Installed: $INSTALL_DIR/denotecli-linux-arm64 (aarch64)"
-        echo "Skill docs: https://github.com/junghan0611/pi-skills/tree/main/denotecli"
+        (cd "$GO_DIR" && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$INSTALL_DIR/denotecli" .)
+        echo "✅ Installed: $INSTALL_DIR/denotecli ($(uname -m))"
+        ls -lh "$INSTALL_DIR/denotecli"
         ;;
     test)
         echo "Running all tests..."
