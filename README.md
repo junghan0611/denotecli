@@ -4,7 +4,7 @@
 
 > Go stdlib only. Single binary. JSON output. Korean-native.
 
-> **AI Agent Skill**: [pi-skills/denotecli](https://github.com/junghan0611/pi-skills/tree/main/denotecli) — 에이전트용 스킬 문서는 pi-skills 리포에서 관리합니다.
+> **AI Agent Skill**: 에이전트용 스킬 문서는 [agent-config](https://github.com/junghan0611/agent-config) 리포의 `skills/denotecli/SKILL.md`에서 관리합니다.
 
 ---
 
@@ -15,14 +15,35 @@ Not just search — semantic navigation, Korean↔English bridging, tag governan
 
 ```bash
 ./run.sh build              # Build + install
-./run.sh test               # 82+ tests
+./run.sh test               # 105 tests
 ./run.sh showcase           # Visual search pattern check
 ./run.sh cover              # Coverage report
 ```
 
 ---
 
-## Commands (10)
+## Denote File Format
+
+```
+YYYYMMDDTHHMMSS[==SIGNATURE]--title-with-hyphens[__tag1_tag2].org
+```
+
+- **ID** = unique timestamp identifier (the key for everything)
+- **Signature** = optional alphanumeric code (`==5a2`, `==0za`), used for [Denote signatures](https://protesilaos.com/emacs/denote#h:4e9c7512-84dc-4dfb-9fa9-e15d51178e5d) (e.g. syntopicon/propaedia ordering)
+- **Frontmatter**: `#+title:`, `#+date:`, `#+filetags:`, `#+identifier:`
+- **Links**: `[[denote:YYYYMMDDTHHMMSS]]`
+
+Examples:
+```
+20251107T082610--제목-하이픈-구분__tag1_tag2_tag3.org          # standard
+20250904T075937==5a2--힣-ai-에이전트__agents_ai.org           # with signature
+20250421T125513==0--†-syntopicon-신토피콘__metameta.org       # single-char signature
+20251021T105353--simple-title.org                              # no tags
+```
+
+---
+
+## Commands (12)
 
 ### Search
 
@@ -45,6 +66,14 @@ denotecli read 20250314T125213 --offset 41 --limit 20  # specific section by lin
 denotecli graph 20250314T125213                         # outgoing + incoming links
 denotecli keyword-map "이맥스"                          # Korean↔English tag mapping
 denotecli keyword-map "emacs"                           # bidirectional
+```
+
+### Day / Timeline
+
+```bash
+denotecli day 2023-02-22                               # 특정 날짜 저널/노트/datetree 통합
+denotecli day --years-ago 3                             # N년 전 오늘
+denotecli timeline-journal --month 2023-02             # 월간 저널 활동 개요
 ```
 
 ### Manage
@@ -86,28 +115,30 @@ Requires Go 1.21+. No external dependencies (stdlib only).
 
 ## Output
 
-All output is JSON. See [SKILL.md](SKILL.md) for detailed examples per command.
+All output is JSON. Signature field included when present (`"signature": "5a2"`), omitted when absent.
+
+```json
+{
+  "id": "20250904T075937",
+  "signature": "5a2",
+  "title": "힣-ai-에이전트-편재성-기억-연결",
+  "tags": ["agents", "ai"],
+  "date": "2025-09-04",
+  "path": "/home/.../meta/20250904T075937==5a2--힣-ai-에이전트-편재성-기억-연결__agents_ai.org"
+}
+```
 
 ---
 
 ## Testing
 
 ```bash
-./run.sh test       # All 82+ tests
+./run.sh test       # All 105 tests
 ./run.sh showcase   # Visual: all search patterns with input→output
 ./run.sh cover      # Coverage report (logic functions: 85-100%)
 ```
 
-**Showcase tests** (`go test -v -run TestShowcase`) print every search pattern with actual results — makes edge cases visible at a glance:
-
-```
-=== search patterns ===
-  [한글 다중단어] query="에릭 호퍼" → 1건
-    → 20250314T125213 에릭호퍼-방랑자의-철학 [autobiography,bib,philosophy]
-  [영어 + 태그 필터] query="설정" tags="emacs" → 2건
-    → 20250101T100000 emacs-설정-가이드 [config,emacs]
-    → 20250201T100000 둠이맥스-설정 [config,doomemacs,emacs]
-```
+**Showcase tests** (`go test -v -run TestShowcase`) print every search pattern with actual results — makes edge cases visible at a glance.
 
 ---
 
@@ -116,13 +147,12 @@ All output is JSON. See [SKILL.md](SKILL.md) for detailed examples per command.
 ```
 denotecli/
 ├── run.sh                    # Build, test, showcase, cover
-├── SKILL.md                  # AI skill definition (pi-skills compatible)
 ├── README.md
 ├── docs/
 │   └── obsidian-cli-comparison.md
-└── denotecli/                # Go source (single package)
-    ├── main.go               # CLI routing + flag parsing (329 lines)
-    ├── parser.go             # Denote filename + frontmatter + link parser
+└── denotecli/                # Go source (single package, 15 modules + 16 test files)
+    ├── main.go               # CLI routing + flag parsing
+    ├── parser.go             # Denote filename (with signature) + frontmatter + link parser
     ├── search.go             # Directory scanner + title/tag search
     ├── search_headings.go    # Heading search across all files
     ├── search_content.go     # Full-text content search
@@ -133,21 +163,11 @@ denotecli/
     ├── rename_tag.go         # Batch tag rename (filename + frontmatter)
     ├── tags.go               # Tag statistics
     ├── tag_suggest.go        # Stem-based duplicate detection
+    ├── day.go                # Day query (journal + datetree + notes)
+    ├── timeline_journal.go   # Monthly journal timeline
     ├── stemmer.go            # Porter stemmer (embedded, no deps)
-    ├── *_test.go             # Unit tests per module
-    ├── integration_test.go   # 7 agent workflow scenarios
-    └── showcase_test.go      # Visual search pattern display
+    └── *_test.go             # 105 tests (unit + integration + showcase)
 ```
-
----
-
-## As an AI Skill
-
-See [SKILL.md](SKILL.md) for full skill documentation including:
-- **Why this exists** (beyond rg/fd)
-- **Typical workflow** for agents
-- **All command examples** with JSON output
-- **Flag reference** with applies-to column
 
 ---
 
@@ -155,7 +175,7 @@ See [SKILL.md](SKILL.md) for full skill documentation including:
 
 | Project | Description |
 |---------|-------------|
-| [pi-skills](https://github.com/junghan0611/pi-skills) | AI skill collection — denotecli distributed as a skill |
+| [agent-config](https://github.com/junghan0611/agent-config) | AI agent configuration — denotecli SKILL.md managed here |
 | [zotero-config](https://github.com/junghan0611/zotero-config) | Headless Zotero + **bibcli** (sister CLI for 8K+ bibliography) |
 
 ---
