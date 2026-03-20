@@ -8,11 +8,12 @@ import (
 
 // DenoteFile represents parsed Denote file metadata.
 type DenoteFile struct {
-	ID    string   `json:"id"`
-	Title string   `json:"title"`
-	Tags  []string `json:"tags"`
-	Date  string   `json:"date"`
-	Path  string   `json:"path"`
+	ID        string   `json:"id"`
+	Signature string   `json:"signature,omitempty"`
+	Title     string   `json:"title"`
+	Tags      []string `json:"tags"`
+	Date      string   `json:"date"`
+	Path      string   `json:"path"`
 }
 
 // DenoteContent extends DenoteFile with file content.
@@ -46,7 +47,7 @@ type Frontmatter struct {
 	Description string   `json:"description"`
 }
 
-var denoteRe = regexp.MustCompile(`^(\d{8}T\d{6})--(.+?)(?:__(.+))?\.org$`)
+var denoteRe = regexp.MustCompile(`^(\d{8}T\d{6})(?:==([^-]+))?--(.+?)(?:__(.+))?\.org$`)
 var linkRe = regexp.MustCompile(`\[\[denote:(\d{8}T\d{6})\]`)
 
 // ParseFilename extracts Denote metadata from a filename.
@@ -57,12 +58,13 @@ func ParseFilename(filename string) (DenoteFile, bool) {
 	}
 
 	df := DenoteFile{
-		ID:    m[1],
-		Title: m[2],
+		ID:        m[1],
+		Signature: m[2],
+		Title:     m[3],
 	}
 
-	if m[3] != "" {
-		df.Tags = strings.Split(m[3], "_")
+	if m[4] != "" {
+		df.Tags = strings.Split(m[4], "_")
 	}
 
 	// Derive date from ID: 20251107T082610 -> 2025-11-07

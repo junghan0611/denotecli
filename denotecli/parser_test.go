@@ -9,12 +9,13 @@ import (
 
 func TestParseFilename(t *testing.T) {
 	tests := []struct {
-		name      string
-		filename  string
-		wantID    string
-		wantTitle string
-		wantTags  []string
-		wantOK    bool
+		name          string
+		filename      string
+		wantID        string
+		wantSignature string
+		wantTitle     string
+		wantTags      []string
+		wantOK        bool
 	}{
 		{
 			name:      "standard file",
@@ -57,6 +58,33 @@ func TestParseFilename(t *testing.T) {
 			wantOK:    true,
 		},
 		{
+			name:          "signature with tags",
+			filename:      "20250904T075937==5a2--힣-ai-에이전트-편재성-기억-연결__agents_ai.org",
+			wantID:        "20250904T075937",
+			wantSignature: "5a2",
+			wantTitle:     "힣-ai-에이전트-편재성-기억-연결",
+			wantTags:      []string{"agents", "ai"},
+			wantOK:        true,
+		},
+		{
+			name:          "signature without tags",
+			filename:      "20250424T225036==0za--†-운명-소명-사명.org",
+			wantID:        "20250424T225036",
+			wantSignature: "0za",
+			wantTitle:     "†-운명-소명-사명",
+			wantTags:      nil,
+			wantOK:        true,
+		},
+		{
+			name:          "signature with many tags",
+			filename:      "20230825T162600==3--†-닷파일-설정파일__configuration_dotfiles_install_meta.org",
+			wantID:        "20230825T162600",
+			wantSignature: "3",
+			wantTitle:     "†-닷파일-설정파일",
+			wantTags:      []string{"configuration", "dotfiles", "install", "meta"},
+			wantOK:        true,
+		},
+		{
 			name:     "not a denote file",
 			filename: "README.md",
 			wantOK:   false,
@@ -79,6 +107,9 @@ func TestParseFilename(t *testing.T) {
 			}
 			if df.ID != tt.wantID {
 				t.Errorf("ID = %q, want %q", df.ID, tt.wantID)
+			}
+			if df.Signature != tt.wantSignature {
+				t.Errorf("Signature = %q, want %q", df.Signature, tt.wantSignature)
 			}
 			if df.Title != tt.wantTitle {
 				t.Errorf("Title = %q, want %q", df.Title, tt.wantTitle)
