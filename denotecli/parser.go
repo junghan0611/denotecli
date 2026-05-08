@@ -2,6 +2,8 @@
 package main
 
 import (
+	"bufio"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -13,6 +15,7 @@ type DenoteFile struct {
 	Title     string   `json:"title"`
 	Tags      []string `json:"tags"`
 	Date      string   `json:"date"`
+	Lastmod   string   `json:"lastmod,omitempty"`
 	Path      string   `json:"path"`
 }
 
@@ -25,10 +28,10 @@ type DenoteContent struct {
 
 // OutlineEntry represents a single org heading.
 type OutlineEntry struct {
-	Level   int    `json:"level"`
-	Title   string `json:"title"`
-	Line    int    `json:"line"`
-	Tags    string `json:"tags,omitempty"`
+	Level int    `json:"level"`
+	Title string `json:"title"`
+	Line  int    `json:"line"`
+	Tags  string `json:"tags,omitempty"`
 }
 
 // DenoteOutline extends DenoteFile with outline (headings only).
@@ -45,10 +48,20 @@ type Frontmatter struct {
 	Filetags    []string `json:"filetags"`
 	Identifier  string   `json:"identifier"`
 	Description string   `json:"description"`
+	HugoLastmod string   `json:"hugo_lastmod,omitempty"`
 }
 
 var denoteRe = regexp.MustCompile(`^(\d{8}T\d{6})(?:==([^-]+))?--(.+?)(?:__(.+))?\.org$`)
 var linkRe = regexp.MustCompile(`\[\[denote:(\d{8}T\d{6})\]`)
+var dateRe = regexp.MustCompile(`\d{4}-\d{2}-\d{2}`)
+
+// ExtractDate finds the first YYYY-MM-DD substring.
+// Used to normalize org timestamp variants — [2025-06-10], [2025-03-29 Sat 02:06],
+// <2024-01-03 Wed 16:54>, 2023-06-19, "Time-stamp: <2025-01-31 12:54:06 junghan>".
+// Returns empty string if no date pattern is found.
+func ExtractDate(s string) string {
+	return dateRe.FindString(s)
+}
 
 // ParseFilename extracts Denote metadata from a filename.
 func ParseFilename(filename string) (DenoteFile, bool) {
@@ -101,9 +114,42 @@ func ParseFrontmatter(content string) Frontmatter {
 			fm.Identifier = strings.TrimSpace(line[13:])
 		case strings.HasPrefix(line, "#+description:"):
 			fm.Description = strings.TrimSpace(line[14:])
+		case strings.HasPrefix(line, "#+hugo_lastmod:"):
+			fm.HugoLastmod = strings.TrimSpace(line[15:])
 		}
 	}
 	return fm
+}
+
+// ReadFrontmatterFile opens a file and parses only its frontmatter region.
+// Reads at most maxLines lines or until the first heading/blank-line terminator
+// in ParseFrontmatter, whichever comes first. Use this for bulk passes (e.g. day
+// notes_modified) to avoid loading entire org files into memory.
+// Returns empty Frontmatter on any error.
+func ReadFrontmatterFile(path string, maxLines int) Frontmatter {
+	f, err := os.Open(path)
+	if err != nil {
+		return Frontmatter{}
+	}
+	defer f.Close()
+
+	if maxLines <= 0 {
+		maxLines = 50
+	}
+	var sb strings.Builder
+	scanner := bufio.NewScanner(f)
+	// Frontmatter lines should be short; default token size is fine, but bump for safety.
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	count := 0
+	for scanner.Scan() {
+		sb.WriteString(scanner.Text())
+		sb.WriteByte('\n')
+		count++
+		if count >= maxLines {
+			break
+		}
+	}
+	return ParseFrontmatter(sb.String())
 }
 
 // ExtractLinks finds all [[denote:ID]] links in content.

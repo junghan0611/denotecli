@@ -132,6 +132,7 @@ func TestParseFrontmatter(t *testing.T) {
 #+filetags:   :philosophy:creativity:wisdom:
 #+identifier: 20250314T152111
 #+description: 에릭 호퍼의 사상과 창조성에 대한 노트
+#+hugo_lastmod: [2025-03-29 Sat 02:06]
 
 * 히스토리
 - [2025-03-14] 초안 작성
@@ -149,6 +150,9 @@ func TestParseFrontmatter(t *testing.T) {
 	if fm.Identifier != "20250314T152111" {
 		t.Errorf("Identifier = %q", fm.Identifier)
 	}
+	if fm.HugoLastmod != "[2025-03-29 Sat 02:06]" {
+		t.Errorf("HugoLastmod = %q", fm.HugoLastmod)
+	}
 	wantTags := []string{"philosophy", "creativity", "wisdom"}
 	if len(fm.Filetags) != len(wantTags) {
 		t.Fatalf("Filetags = %v, want %v", fm.Filetags, wantTags)
@@ -157,6 +161,126 @@ func TestParseFrontmatter(t *testing.T) {
 		if tag != wantTags[i] {
 			t.Errorf("Filetags[%d] = %q, want %q", i, tag, wantTags[i])
 		}
+	}
+}
+
+func TestExtractDate(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"[2025-06-10]", "2025-06-10"},
+		{"[2025-03-29 Sat 02:06]", "2025-03-29"},
+		{"<2024-01-03 Wed 16:54>", "2024-01-03"},
+		{"2023-06-19", "2023-06-19"},
+		{"Time-stamp: <2025-01-31 12:54:06 junghan>", "2025-01-31"},
+		{"no date here", ""},
+	}
+	for _, tt := range tests {
+		if got := ExtractDate(tt.in); got != tt.want {
+			t.Errorf("ExtractDate(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+func TestParseFrontmatterHugoLastmod(t *testing.T) {
+	cases := []struct {
+		name        string
+		content     string
+		wantLastmod string
+		wantDate    string // ExtractDate output
+	}{
+		{
+			name:        "bracket date only",
+			content:     "#+title: t\n#+identifier: 20250610T120000\n#+hugo_lastmod: [2025-06-10]\n",
+			wantLastmod: "[2025-06-10]",
+			wantDate:    "2025-06-10",
+		},
+		{
+			name:        "bracket with day and time",
+			content:     "#+title: t\n#+identifier: 20250329T020600\n#+hugo_lastmod: [2025-03-29 Sat 02:06]\n",
+			wantLastmod: "[2025-03-29 Sat 02:06]",
+			wantDate:    "2025-03-29",
+		},
+		{
+			name:        "angle active timestamp",
+			content:     "#+title: t\n#+identifier: 20240103T165400\n#+hugo_lastmod: <2024-01-03 Wed 16:54>\n",
+			wantLastmod: "<2024-01-03 Wed 16:54>",
+			wantDate:    "2024-01-03",
+		},
+		{
+			name:        "bare date",
+			content:     "#+title: t\n#+identifier: 20230619T000000\n#+hugo_lastmod: 2023-06-19\n",
+			wantLastmod: "2023-06-19",
+			wantDate:    "2023-06-19",
+		},
+		{
+			name:        "emacs time-stamp form",
+			content:     "#+title: t\n#+identifier: 20250131T125400\n#+hugo_lastmod: Time-stamp: <2025-01-31 12:54:06 junghan>\n",
+			wantLastmod: "Time-stamp: <2025-01-31 12:54:06 junghan>",
+			wantDate:    "2025-01-31",
+		},
+		{
+			name:        "missing field",
+			content:     "#+title: t\n#+identifier: 20250101T000000\n",
+			wantLastmod: "",
+			wantDate:    "",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			fm := ParseFrontmatter(tc.content)
+			if fm.HugoLastmod != tc.wantLastmod {
+				t.Errorf("HugoLastmod = %q, want %q", fm.HugoLastmod, tc.wantLastmod)
+			}
+			if got := ExtractDate(fm.HugoLastmod); got != tc.wantDate {
+				t.Errorf("ExtractDate(%q) = %q, want %q", fm.HugoLastmod, got, tc.wantDate)
+			}
+		})
+	}
+}
+
+func TestParseFrontmatterIgnoresBodyHugoLastmod(t *testing.T) {
+	// A line that looks like #+hugo_lastmod inside the body (after first heading)
+	// must NOT be parsed as a frontmatter value.
+	content := `#+title:      t
+#+identifier: 20260101T000000
+
+* 본문
+#+hugo_lastmod: [2099-12-31]
+`
+	fm := ParseFrontmatter(content)
+	if fm.HugoLastmod != "" {
+		t.Errorf("HugoLastmod leaked from body = %q", fm.HugoLastmod)
+	}
+}
+
+func TestReadFrontmatterFile(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "20260508T100000--sample.org")
+	body := `#+title:      sample
+#+date:       [2026-05-08 Fri 10:00]
+#+identifier: 20260508T100000
+#+hugo_lastmod: [2026-05-08 Fri 22:24]
+
+* 본문
+real content goes here.
+`
+	if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+		t.Fatal(err)
+	}
+	fm := ReadFrontmatterFile(path, 50)
+	if fm.Title != "sample" {
+		t.Errorf("Title = %q", fm.Title)
+	}
+	if got := ExtractDate(fm.HugoLastmod); got != "2026-05-08" {
+		t.Errorf("ExtractDate = %q, want 2026-05-08", got)
+	}
+
+	// Missing file -> empty Frontmatter, no panic.
+	missing := ReadFrontmatterFile(filepath.Join(tmp, "nope.org"), 50)
+	if missing.Title != "" || missing.HugoLastmod != "" {
+		t.Errorf("missing file should yield zero Frontmatter, got %+v", missing)
 	}
 }
 

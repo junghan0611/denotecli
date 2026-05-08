@@ -11,19 +11,26 @@ import (
 )
 
 // DayResult is the top-level output of `denotecli day`.
+//
+// notes_created and notes_modified are complementary, not overlapping —
+// a file created on the queried date is excluded from notes_modified even if
+// its #+hugo_lastmod also matches, to avoid duplication. notes_modified
+// reports only files whose creation date differs from the queried date but
+// whose explicit #+hugo_lastmod field resolves to it.
 type DayResult struct {
-	Date         string        `json:"date"`
-	DayOfWeek    string        `json:"day_of_week"`
-	YearsAgo     int           `json:"years_ago"`
-	Journal      *JournalData  `json:"journal"`
-	Datetree     *DatetreeData `json:"datetree"`
-	NotesCreated []DenoteFile  `json:"notes_created"`
+	Date          string        `json:"date"`
+	DayOfWeek     string        `json:"day_of_week"`
+	YearsAgo      int           `json:"years_ago"`
+	Journal       *JournalData  `json:"journal"`
+	Datetree      *DatetreeData `json:"datetree"`
+	NotesCreated  []DenoteFile  `json:"notes_created"`
+	NotesModified []DenoteFile  `json:"notes_modified"`
 }
 
 // JournalData holds parsed journal entries for a day.
 type JournalData struct {
 	Source  string         `json:"source"`
-	Format string         `json:"format"` // "daily", "daily-archive", "weekly"
+	Format  string         `json:"format"` // "daily", "daily-archive", "weekly"
 	Entries []JournalEntry `json:"entries"`
 }
 
@@ -35,8 +42,8 @@ type JournalEntry struct {
 
 // DatetreeData holds parsed diary.org entries for a day.
 type DatetreeData struct {
-	Source  string           `json:"source"`
-	Entries []DatetreeEntry  `json:"entries"`
+	Source  string          `json:"source"`
+	Entries []DatetreeEntry `json:"entries"`
 }
 
 // DatetreeEntry is a single time entry in diary.org datetree.
@@ -57,9 +64,10 @@ func QueryDay(dirs []string, dateStr string) DayResult {
 	}
 
 	result := DayResult{
-		Date:         dateStr,
-		DayOfWeek:    t.Weekday().String(),
-		NotesCreated: []DenoteFile{},
+		Date:          dateStr,
+		DayOfWeek:     t.Weekday().String(),
+		NotesCreated:  []DenoteFile{},
+		NotesModified: []DenoteFile{},
 	}
 
 	// Calculate years ago
@@ -80,6 +88,7 @@ func QueryDay(dirs []string, dateStr string) DayResult {
 	// 3. Notes created on this date
 	datePrefix := strings.ReplaceAll(dateStr, "-", "")
 	files := ScanDirs(dirs)
+	createdIDs := make(map[string]bool)
 	for _, f := range files {
 		if strings.HasPrefix(f.ID, datePrefix) {
 			// Skip journal files themselves
@@ -88,10 +97,45 @@ func QueryDay(dirs []string, dateStr string) DayResult {
 				continue
 			}
 			result.NotesCreated = append(result.NotesCreated, f)
+			createdIDs[f.ID] = true
 		}
 	}
 
+	// 4. Notes modified on this date — explicit #+hugo_lastmod only.
+	//    Skips files already in NotesCreated (axes are complementary).
+	//    Reads only frontmatter head per file (~50 lines) to keep the day
+	//    command interactive even on 3000+ note corpora.
+	result.NotesModified = collectNotesModified(files, dateStr, createdIDs)
+
 	return result
+}
+
+// collectNotesModified scans Denote files for #+hugo_lastmod matching dateStr.
+// Files with IDs in skip are excluded (they are reported via NotesCreated).
+// Journal files are also skipped. The returned DenoteFile entries have their
+// Lastmod field populated with the resolved YYYY-MM-DD value.
+func collectNotesModified(files []DenoteFile, dateStr string, skip map[string]bool) []DenoteFile {
+	out := []DenoteFile{}
+	for _, f := range files {
+		if skip[f.ID] {
+			continue
+		}
+		base := filepath.Base(f.Path)
+		if strings.Contains(base, "__journal") || strings.Contains(base, "__archive_journal") {
+			continue
+		}
+		fm := ReadFrontmatterFile(f.Path, 50)
+		if fm.HugoLastmod == "" {
+			continue
+		}
+		d := ExtractDate(fm.HugoLastmod)
+		if d != dateStr {
+			continue
+		}
+		f.Lastmod = d
+		out = append(out, f)
+	}
+	return out
 }
 
 // findJournal searches journal/ directory for a specific date.

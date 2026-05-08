@@ -209,6 +209,52 @@ CLOCK: [2023-02-22 Wed 07:45]--[2023-02-22 Wed 07:46] =>  0:01
 	if len(result.NotesCreated) != 1 {
 		t.Errorf("notes = %d, want 1", len(result.NotesCreated))
 	}
+	if len(result.NotesModified) != 0 {
+		t.Errorf("modified notes = %d, want 0", len(result.NotesModified))
+	}
+}
+
+func TestQueryDayIncludesNotesModified(t *testing.T) {
+	base := t.TempDir()
+	notesDir := filepath.Join(base, "notes")
+	if err := os.MkdirAll(notesDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(notesDir, "20230222T123300--created-today__test.org"), []byte(`#+title: Created Today
+#+hugo_lastmod: [2023-02-22 Wed 18:00]
+`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(notesDir, "20230220T090000--modified-today__test.org"), []byte(`#+title: Modified Today
+#+hugo_lastmod: [2023-02-22 Wed 17:00]
+`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := os.WriteFile(filepath.Join(notesDir, "20230219T090000--untouched__test.org"), []byte(`#+title: Untouched
+#+hugo_lastmod: [2023-02-21 Tue 17:00]
+`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	result := QueryDay([]string{base}, "2023-02-22")
+	if len(result.NotesCreated) != 1 {
+		t.Fatalf("notes created = %d, want 1", len(result.NotesCreated))
+	}
+	if result.NotesCreated[0].ID != "20230222T123300" {
+		t.Fatalf("created note ID = %q", result.NotesCreated[0].ID)
+	}
+	if len(result.NotesModified) != 1 {
+		t.Fatalf("notes modified = %d, want 1", len(result.NotesModified))
+	}
+	if result.NotesModified[0].ID != "20230220T090000" {
+		t.Fatalf("modified note ID = %q", result.NotesModified[0].ID)
+	}
+	if result.NotesModified[0].Lastmod != "2023-02-22" {
+		t.Fatalf("modified note lastmod = %q", result.NotesModified[0].Lastmod)
+	}
 }
 
 func TestCleanHeadingText(t *testing.T) {
@@ -255,6 +301,94 @@ func TestFindJournalWeeklyFromMidweek(t *testing.T) {
 	}
 	if result.Journal.Entries[0].Text != "wednesday meeting" {
 		t.Errorf("text = %q", result.Journal.Entries[0].Text)
+	}
+}
+
+// TestQueryDayNotesModified exercises the hugo_lastmod axis end-to-end.
+//
+// Layout:
+//   - notes/A: created on the queried date (goes to NotesCreated only)
+//   - notes/B: older file, hugo_lastmod matches today (goes to NotesModified)
+//   - notes/C: older file, no hugo_lastmod (skipped from both)
+//   - notes/D: older file, hugo_lastmod = different date (skipped)
+//   - notes/E: created on the queried date AND hugo_lastmod = today
+//     → must appear in NotesCreated only, NotesModified must NOT duplicate
+//   - notes/F: hugo_lastmod inside body (after first heading) → must be ignored
+func TestQueryDayNotesModified(t *testing.T) {
+	base := t.TempDir()
+	notesDir := filepath.Join(base, "notes")
+	if err := os.MkdirAll(notesDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	target := "2026-05-08"
+
+	write := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(notesDir, name), []byte(body), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("20260508T093000--note-a__test.org",
+		"#+title: A\n#+identifier: 20260508T093000\n")
+	write("20240906T154822--note-b__test.org",
+		"#+title: B\n#+identifier: 20240906T154822\n#+hugo_lastmod: [2026-05-08 Fri 22:24]\n")
+	write("20240906T154823--note-c__test.org",
+		"#+title: C\n#+identifier: 20240906T154823\n")
+	write("20240906T154824--note-d__test.org",
+		"#+title: D\n#+identifier: 20240906T154824\n#+hugo_lastmod: [2025-12-25]\n")
+	write("20260508T100000--note-e__test.org",
+		"#+title: E\n#+identifier: 20260508T100000\n#+hugo_lastmod: [2026-05-08]\n")
+	write("20240906T154825--note-f__test.org",
+		"#+title: F\n#+identifier: 20240906T154825\n\n* body\n#+hugo_lastmod: [2026-05-08]\n")
+
+	result := QueryDay([]string{base}, target)
+
+	createdIDs := map[string]bool{}
+	for _, f := range result.NotesCreated {
+		createdIDs[f.ID] = true
+	}
+	if !createdIDs["20260508T093000"] || !createdIDs["20260508T100000"] {
+		t.Errorf("NotesCreated missing expected IDs: got %+v", createdIDs)
+	}
+
+	modifiedIDs := map[string]string{}
+	for _, f := range result.NotesModified {
+		modifiedIDs[f.ID] = f.Lastmod
+	}
+	if got, ok := modifiedIDs["20240906T154822"]; !ok || got != target {
+		t.Errorf("note B should be in NotesModified with lastmod=%s, got %q (ok=%v)", target, got, ok)
+	}
+	if _, dup := modifiedIDs["20260508T100000"]; dup {
+		t.Errorf("note E was created today; must NOT duplicate into NotesModified")
+	}
+	if _, leak := modifiedIDs["20240906T154823"]; leak {
+		t.Errorf("note C has no hugo_lastmod; must NOT appear in NotesModified")
+	}
+	if _, leak := modifiedIDs["20240906T154824"]; leak {
+		t.Errorf("note D has different hugo_lastmod; must NOT appear in NotesModified")
+	}
+	if _, leak := modifiedIDs["20240906T154825"]; leak {
+		t.Errorf("note F's hugo_lastmod sits in body; must NOT appear in NotesModified")
+	}
+}
+
+func TestQueryDayNotesModifiedSkipsJournal(t *testing.T) {
+	// A journal file that happens to carry hugo_lastmod must not pollute the
+	// modified axis — journal entries already have their own surface.
+	base := t.TempDir()
+	journalDir := filepath.Join(base, "journal")
+	if err := os.MkdirAll(journalDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(
+		filepath.Join(journalDir, "20240101T000000--2024-01-01__journal.org"),
+		[]byte("#+title: 2024-01-01\n#+identifier: 20240101T000000\n#+hugo_lastmod: [2026-05-08]\n** 09:00 something\n"),
+		0644,
+	); err != nil {
+		t.Fatal(err)
+	}
+	result := QueryDay([]string{base}, "2026-05-08")
+	if len(result.NotesModified) != 0 {
+		t.Errorf("journal hugo_lastmod must be ignored, got %+v", result.NotesModified)
 	}
 }
 

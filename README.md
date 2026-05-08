@@ -71,10 +71,24 @@ denotecli keyword-map "emacs"                           # bidirectional
 ### Day / Timeline
 
 ```bash
-denotecli day 2023-02-22                               # 특정 날짜 저널/노트/datetree 통합
+denotecli day 2023-02-22                               # 특정 날짜 저널/노트/datetree 통합 (생성+수정 노트)
 denotecli day --years-ago 3                             # N년 전 오늘
 denotecli timeline-journal --month 2023-02             # 월간 저널 활동 개요
 ```
+
+`denotecli day`는 다섯 축을 함께 반환합니다.
+
+| Field | Source | Meaning |
+|---|---|---|
+| `journal` | `journal/<date>__journal.org` 또는 weekly | 그날 저널 시간 엔트리 |
+| `datetree` | `*--diary.org` reverse datetree | 그날 datetree 엔트리 + CLOCK |
+| `notes_created` | 파일명 ID prefix == 그날 | 그날 만든 Denote 노트 |
+| `notes_modified` | 본문의 `#+hugo_lastmod:` == 그날 | 그날 **수정된** 노트. 생성일은 다른 날 |
+| `years_ago` | system time | 같은 월일 N년 전인 경우 N |
+
+`notes_created`와 `notes_modified`는 **상보(complementary)** 관계로 정의됩니다 — 같은 날 만들고 그날 `hugo_lastmod`까지 박은 파일은 `notes_created`에만 들어가고 `notes_modified`에서는 제외됩니다 (중복 방지). `notes_modified`는 명시적인 `#+hugo_lastmod:` 만 신뢰합니다 (mtime/`#+date:` fallback 없음). 다양한 org 타임스탬프 포맷 — `[2025-06-10]`, `[2025-03-29 Sat 02:06]`, `<2024-01-03 Wed 16:54>`, `2023-06-19`, `Time-stamp: <...>` — 모두 첫 `YYYY-MM-DD` 패턴으로 정규화됩니다.
+
+`notes_modified` 패스는 모든 노트의 frontmatter head(첫 50줄)만 읽기 때문에 ~3,300 노트 코퍼스에서 100ms 수준을 유지합니다.
 
 ### Manage
 
