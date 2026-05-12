@@ -10,13 +10,14 @@ import (
 
 // DenoteFile represents parsed Denote file metadata.
 type DenoteFile struct {
-	ID        string   `json:"id"`
-	Signature string   `json:"signature,omitempty"`
-	Title     string   `json:"title"`
-	Tags      []string `json:"tags"`
-	Date      string   `json:"date"`
-	Lastmod   string   `json:"lastmod,omitempty"`
-	Path      string   `json:"path"`
+	ID          string   `json:"id"`
+	Signature   string   `json:"signature,omitempty"`
+	Title       string   `json:"title"`       // filename slug (backward-compat)
+	HeaderTitle string   `json:"header_title,omitempty"` // #+title: header value (Bug 4 fix)
+	Tags        []string `json:"tags"`        // union: filename slots ∪ #+filetags: (Bug 1 fix)
+	Date        string   `json:"date"`
+	Lastmod     string   `json:"lastmod,omitempty"`
+	Path        string   `json:"path"`
 }
 
 // DenoteContent extends DenoteFile with file content.

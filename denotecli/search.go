@@ -8,6 +8,10 @@ import (
 )
 
 // ScanDirs walks directories and returns all parsed Denote files.
+// Each file is enriched with frontmatter data (#+title: and #+filetags:) so
+// that search commands see header content, not just the filename slug.
+// Bug 4 fix: df.HeaderTitle ← #+title: (richer than filename slug)
+// Bug 1 fix: df.Tags ← union(filename slots, #+filetags:)
 func ScanDirs(dirs []string) []DenoteFile {
 	var files []DenoteFile
 	for _, dir := range dirs {
@@ -21,11 +25,37 @@ func ScanDirs(dirs []string) []DenoteFile {
 				return nil
 			}
 			df.Path = path
+			// Enrich with frontmatter — reads at most 30 lines per file.
+			fm := ReadFrontmatterFile(path, 30)
+			if fm.Title != "" {
+				df.HeaderTitle = fm.Title
+			}
+			if len(fm.Filetags) > 0 {
+				df.Tags = unionTags(df.Tags, fm.Filetags)
+			}
 			files = append(files, df)
 			return nil
 		})
 	}
 	return files
+}
+
+// unionTags returns a deduplicated union of a and b (case-insensitive dedup,
+// preserving original casing of a first, then new entries from b).
+func unionTags(a, b []string) []string {
+	seen := make(map[string]bool, len(a)+len(b))
+	for _, t := range a {
+		seen[strings.ToLower(t)] = true
+	}
+	result := make([]string, len(a))
+	copy(result, a)
+	for _, t := range b {
+		if lc := strings.ToLower(t); !seen[lc] {
+			seen[lc] = true
+			result = append(result, t)
+		}
+	}
+	return result
 }
 
 // Search filters DenoteFiles by query, tag, and title-only mode.
@@ -70,12 +100,20 @@ func splitWords(q string) []string {
 
 func buildSearchable(f *DenoteFile, titleOnly bool) string {
 	if titleOnly {
+		// Union slug and header title so --title-only sees the rich #+title: value.
+		if f.HeaderTitle != "" {
+			return strings.ToLower(f.Title) + " " + strings.ToLower(f.HeaderTitle)
+		}
 		return strings.ToLower(f.Title)
 	}
 	var b strings.Builder
 	b.WriteString(strings.ToLower(f.ID))
 	b.WriteByte(' ')
 	b.WriteString(strings.ToLower(f.Title))
+	if f.HeaderTitle != "" {
+		b.WriteByte(' ')
+		b.WriteString(strings.ToLower(f.HeaderTitle))
+	}
 	for _, tag := range f.Tags {
 		b.WriteByte(' ')
 		b.WriteString(strings.ToLower(tag))
