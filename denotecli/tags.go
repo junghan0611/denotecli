@@ -34,7 +34,7 @@ func CollectTags(files []DenoteFile, pattern string, top int) TagsResult {
 		patRe, _ = regexp.Compile(pattern)
 	}
 
-	var tags []TagStat
+	tags := make([]TagStat, 0)
 	for name, count := range counts {
 		if patRe != nil && !patRe.MatchString(name) {
 			continue

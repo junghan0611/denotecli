@@ -27,7 +27,7 @@ var hashKeywordRe = regexp.MustCompile(`#(\S+)`)
 // Meta notes use #+title with #한글키워드 and filename tags in English.
 func BuildKeywordMap(files []DenoteFile, query string) KeywordMapResult {
 	words := splitWords(strings.ToLower(query))
-	var entries []KeywordEntry
+	entries := make([]KeywordEntry, 0)
 
 	for _, f := range files {
 		// Only process meta-tagged files

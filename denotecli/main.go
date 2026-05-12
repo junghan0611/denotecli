@@ -60,6 +60,10 @@ func cmdDayQuery() {
 		date = os.Args[2]
 		args = os.Args[3:]
 	}
+	if err := validateFlags(args,
+		[]string{"--dirs", "--years-ago", "--days-ago"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	yearsAgo := getFlag(args, "--years-ago", "")
 	daysAgo := getFlag(args, "--days-ago", "")
@@ -76,6 +80,10 @@ func cmdDayQuery() {
 
 func cmdTimelineJournal() {
 	args := os.Args[2:]
+	if err := validateFlags(args,
+		[]string{"--dirs", "--month", "--from", "--to"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	month := getFlag(args, "--month", "")
 	from := getFlag(args, "--from", "")
@@ -92,6 +100,11 @@ func cmdSearch() {
 	}
 	query := os.Args[2]
 	args := os.Args[3:]
+	if err := validateFlags(args,
+		[]string{"--tags", "--dirs", "--max"},
+		[]string{"--title-only"}); err != nil {
+		fatal(err.Error())
+	}
 	tagFilter := getFlag(args, "--tags", "")
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	titleOnly := hasFlag(args, "--title-only")
@@ -113,6 +126,9 @@ func cmdGraph() {
 	}
 	id := os.Args[2]
 	args := os.Args[3:]
+	if err := validateFlags(args, []string{"--dirs"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 
 	dirs := strings.Split(dirsStr, ",")
@@ -130,6 +146,10 @@ func cmdKeywordMap() {
 	if len(os.Args) >= 3 && !strings.HasPrefix(os.Args[2], "--") {
 		query = os.Args[2]
 		args = os.Args[3:]
+	}
+	if err := validateFlags(args,
+		[]string{"--dirs", "--max"}, nil); err != nil {
+		fatal(err.Error())
 	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	maxStr := getFlag(args, "--max", "50")
@@ -149,6 +169,10 @@ func cmdKeywordMap() {
 
 func cmdCreate() {
 	args := os.Args[2:]
+	if err := validateFlags(args,
+		[]string{"--title", "--tags", "--dir", "--content"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	title := getFlag(args, "--title", "")
 	if title == "" {
 		fatal("usage: denotecli create --title <title> [--tags TAG,...] [--dir DIR] [--content TEXT]")
@@ -187,6 +211,10 @@ func cmdSearchContent() {
 	}
 	query := os.Args[2]
 	args := os.Args[3:]
+	if err := validateFlags(args,
+		[]string{"--dirs", "--tags", "--max", "--matches"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	tagFilter := getFlag(args, "--tags", "")
 	maxStr := getFlag(args, "--max", "20")
@@ -212,6 +240,10 @@ func cmdSearchHeadings() {
 	}
 	query := os.Args[2]
 	args := os.Args[3:]
+	if err := validateFlags(args,
+		[]string{"--dirs", "--tags", "--level", "--max"}, nil); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	tagFilter := getFlag(args, "--tags", "")
 	levelStr := getFlag(args, "--level", "0")
@@ -234,6 +266,11 @@ func cmdRead() {
 	}
 	id := os.Args[2]
 	args := os.Args[3:]
+	if err := validateFlags(args,
+		[]string{"--dirs", "--offset", "--limit", "--level"},
+		[]string{"--outline"}); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	outline := hasFlag(args, "--outline")
 
@@ -266,6 +303,11 @@ func cmdRead() {
 
 func cmdRenameTag() {
 	args := os.Args[2:]
+	if err := validateFlags(args,
+		[]string{"--from", "--to", "--dirs"},
+		[]string{"--dry-run"}); err != nil {
+		fatal(err.Error())
+	}
 	oldTag := getFlag(args, "--from", "")
 	newTag := getFlag(args, "--to", "")
 	if oldTag == "" || newTag == "" {
@@ -285,6 +327,11 @@ func cmdRenameTag() {
 
 func cmdTags() {
 	args := os.Args[2:]
+	if err := validateFlags(args,
+		[]string{"--dirs", "--pattern", "--top"},
+		[]string{"--suggest"}); err != nil {
+		fatal(err.Error())
+	}
 	dirsStr := getFlag(args, "--dirs", "~/org")
 	suggest := hasFlag(args, "--suggest")
 
@@ -359,6 +406,38 @@ func hasFlag(args []string, name string) bool {
 		}
 	}
 	return false
+}
+
+// validateFlags errors if args contains any --flag not in valueFlags or boolFlags.
+// valueFlags take the next token as value (e.g. --max 20).
+// boolFlags are standalone (e.g. --dry-run).
+// This catches typos like --tag (vs --tags) and --limit (vs --max)
+// that would otherwise be silently ignored by getFlag/hasFlag, leading to
+// wrong defaults masquerading as filtered results. See llmlog 20260512T102541.
+func validateFlags(args []string, valueFlags, boolFlags []string) error {
+	val := make(map[string]bool, len(valueFlags))
+	for _, f := range valueFlags {
+		val[f] = true
+	}
+	bf := make(map[string]bool, len(boolFlags))
+	for _, f := range boolFlags {
+		bf[f] = true
+	}
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if !strings.HasPrefix(a, "--") {
+			continue
+		}
+		if val[a] {
+			i++ // skip flag value
+			continue
+		}
+		if bf[a] {
+			continue
+		}
+		return fmt.Errorf("unknown flag: %s", a)
+	}
+	return nil
 }
 
 func printJSON(v interface{}) {

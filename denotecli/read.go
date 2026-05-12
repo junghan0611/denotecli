@@ -58,7 +58,7 @@ func ReadByID(files []DenoteFile, id string, offset int, limit int) (DenoteConte
 
 // ExtractOutline parses org headings from content.
 func ExtractOutline(content string) []OutlineEntry {
-	var outline []OutlineEntry
+	outline := make([]OutlineEntry, 0)
 	for i, line := range strings.Split(content, "\n") {
 		m := headingRe.FindStringSubmatch(line)
 		if m == nil {
@@ -97,7 +97,7 @@ func FilterOutlineByLevel(outline []OutlineEntry, maxLevel int) []OutlineEntry {
 	if maxLevel <= 0 {
 		return outline
 	}
-	var filtered []OutlineEntry
+	filtered := make([]OutlineEntry, 0)
 	for _, e := range outline {
 		if e.Level <= maxLevel {
 			filtered = append(filtered, e)

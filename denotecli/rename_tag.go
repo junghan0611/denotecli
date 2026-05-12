@@ -26,7 +26,7 @@ func RenameTag(files []DenoteFile, oldTag, newTag string, dryRun bool) (RenameTa
 	oldTag = strings.ToLower(oldTag)
 	newTag = strings.ToLower(newTag)
 
-	var modified []string
+	modified := make([]string, 0)
 
 	for _, f := range files {
 		if !hasTag(f.Tags, oldTag) {

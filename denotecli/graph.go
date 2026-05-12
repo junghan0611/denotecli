@@ -39,14 +39,14 @@ func BuildGraph(files []DenoteFile, id string, depth int) (GraphResult, error) {
 		return GraphResult{}, err
 	}
 	outIDs := ExtractLinks(string(data))
-	var outgoing []GraphLink
+	outgoing := make([]GraphLink, 0)
 	for _, oid := range outIDs {
 		link := GraphLink{SourceID: id, SourceTitle: target.Title, TargetID: oid}
 		outgoing = append(outgoing, link)
 	}
 
 	// Incoming: other notes that link to this ID
-	var incoming []GraphLink
+	incoming := make([]GraphLink, 0)
 	needle := "denote:" + id
 	for i := range files {
 		if files[i].ID == id {

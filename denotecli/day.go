@@ -228,7 +228,7 @@ func parseDailyJournal(path string) []JournalEntry {
 	}
 	defer f.Close()
 
-	var entries []JournalEntry
+	entries := make([]JournalEntry, 0)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -256,7 +256,7 @@ func parseWeeklyJournal(path, targetDate string, t time.Time) []JournalEntry {
 
 	dayHeader := "* " + targetDate
 	inDay := false
-	var entries []JournalEntry
+	entries := make([]JournalEntry, 0)
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -330,7 +330,7 @@ func parseDatetree(path, dateHeader string) []DatetreeEntry {
 	defer f.Close()
 
 	inDay := false
-	var entries []DatetreeEntry
+	entries := make([]DatetreeEntry, 0)
 	var currentClock string
 
 	scanner := bufio.NewScanner(f)

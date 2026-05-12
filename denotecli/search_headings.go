@@ -16,7 +16,7 @@ type HeadingMatch struct {
 // tagFilter filters files by tag before heading search (comma-separated, OR).
 func SearchHeadings(files []DenoteFile, query string, tagFilter string, maxLevel int, max int) []HeadingMatch {
 	words := splitWords(strings.ToLower(query))
-	var results []HeadingMatch
+	results := make([]HeadingMatch, 0)
 
 	for _, f := range files {
 		if tagFilter != "" && !hasTag(f.Tags, tagFilter) {

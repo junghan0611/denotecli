@@ -55,10 +55,14 @@ func TestSearchContentMaxFiles(t *testing.T) {
 	dir := setupTestDir(t)
 	files := ScanDirs([]string{dir})
 
-	// Empty query words → nil
+	// Empty query → empty slice (NOT nil). Agent callers rely on a valid
+	// array contract; nil would marshal to JSON null and break len() calls.
 	results := SearchContent(files, "", "", 20, 3)
-	if results != nil {
-		t.Errorf("expected nil for empty query, got %d results", len(results))
+	if results == nil {
+		t.Errorf("expected non-nil empty slice for empty query, got nil")
+	}
+	if len(results) != 0 {
+		t.Errorf("expected 0 results for empty query, got %d", len(results))
 	}
 }
 

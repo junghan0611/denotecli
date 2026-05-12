@@ -32,7 +32,9 @@ func ScanDirs(dirs []string) []DenoteFile {
 // Multiple query words are AND-matched.
 func Search(files []DenoteFile, query string, tagFilter string, titleOnly bool, max int) []DenoteFile {
 	words := splitWords(query)
-	var results []DenoteFile
+	// Initialize as empty slice (not nil) so JSON marshals to [] not null.
+	// Agent callers rely on a valid array contract even when no matches.
+	results := make([]DenoteFile, 0)
 
 	for i := range files {
 		f := &files[i]
