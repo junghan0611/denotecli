@@ -21,16 +21,8 @@ func ReadByID(files []DenoteFile, id string, offset int, limit int) (DenoteConte
 			content := string(data)
 
 			// Parse frontmatter for richer metadata
-			fm := ParseFrontmatter(content)
-			if fm.Title != "" {
-				f.Title = fm.Title
-			}
-			if fm.Date != "" {
-				f.Date = fm.Date
-			}
-			if len(fm.Filetags) > 0 {
-				f.Tags = fm.Filetags
-			}
+			applyFrontmatter(&f, ParseFrontmatter(content))
+			abstract := ExtractAbstract(content)
 
 			// Apply offset/limit
 			if offset > 0 || limit > 0 {
@@ -48,6 +40,7 @@ func ReadByID(files []DenoteFile, id string, offset int, limit int) (DenoteConte
 
 			return DenoteContent{
 				DenoteFile: f,
+				Abstract:   abstract,
 				Content:    content,
 				Links:      ExtractLinks(string(data)),
 			}, nil
@@ -116,19 +109,11 @@ func ReadOutlineByID(files []DenoteFile, id string) (DenoteOutline, error) {
 			}
 			content := string(data)
 
-			fm := ParseFrontmatter(content)
-			if fm.Title != "" {
-				f.Title = fm.Title
-			}
-			if fm.Date != "" {
-				f.Date = fm.Date
-			}
-			if len(fm.Filetags) > 0 {
-				f.Tags = fm.Filetags
-			}
+			applyFrontmatter(&f, ParseFrontmatter(content))
 
 			return DenoteOutline{
 				DenoteFile: f,
+				Abstract:   ExtractAbstract(content),
 				Outline:    ExtractOutline(content),
 				Links:      ExtractLinks(content),
 			}, nil

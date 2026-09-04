@@ -15,7 +15,7 @@ Not just search — semantic navigation, Korean↔English bridging, tag governan
 
 ```bash
 ./run.sh build              # Build + install
-./run.sh test               # 105 tests
+./run.sh test               # 118 tests
 ./run.sh showcase           # Visual search pattern check
 ./run.sh cover              # Coverage report
 ```
@@ -129,7 +129,8 @@ Requires Go 1.21+. No external dependencies (stdlib only).
 
 ## Output
 
-All output is JSON. Signature field included when present (`"signature": "5a2"`), omitted when absent.
+All output is JSON. Optional fields are omitted when the note does not carry them
+(`signature`, `lastmod`, `hugo_lastmod`, `description`, `abstract`).
 
 ```json
 {
@@ -138,16 +139,56 @@ All output is JSON. Signature field included when present (`"signature": "5a2"`)
   "title": "힣-ai-에이전트-편재성-기억-연결",
   "tags": ["agents", "ai"],
   "date": "2025-09-04",
+  "lastmod": "2026-05-18",
+  "hugo_lastmod": "[2026-05-18 Mon 09:09]",
+  "description": "노트 한 줄 요약 (#+description:).",
   "path": "/home/.../meta/20250904T075937==5a2--힣-ai-에이전트-편재성-기억-연결__agents_ai.org"
 }
 ```
+
+### 생성 시각과 수정 시각은 다른 축이다
+
+`date` 는 만들어진 때(`#+date:`, 또는 Denote ID에서 유도)이고 **수정 시각이 아니다.**
+수정은 `#+hugo_lastmod:` 하나뿐이며 두 모양으로 함께 나간다:
+
+| 필드 | 값 | 쓰는 자리 |
+|---|---|---|
+| `lastmod` | `2026-05-18` | 날짜 비교, `day` 커맨드와 같은 모양 |
+| `hugo_lastmod` | `[2026-05-18 Mon 09:09]` | 원본 그대로 — **HH:MM이 필요한 비교** |
+
+시각을 남겨 두는 이유가 실측으로 섰다. 날짜만 보고 판정하면 같은 날 21:55에 찍힌
+도장보다 이른 18:32 커밋이 "도장 이후 커밋"으로 잘못 세어진다. 호출자가 org 파일을
+따로 정규식으로 파지 않도록, 유도 가능한 값은 이쪽에서 두 모양 다 준다.
+
+`search` / `list` / `day` / `read` 모두 같은 필드를 싣는다 — "어느 노트가 낡았나"는
+한 번의 호출로 답해져야 한다.
+
+### `abstract` — 이 노트가 무엇인가
+
+`read` (일반·`--outline` 둘 다)는 첫 헤딩 앞에 놓인 콜아웃 인용 블록을 구조화해서 준다.
+
+```org
+#+begin_quote
+[!abstract] 이 노트에 대하여
+
+...본문...
+#+end_quote
+```
+
+```json
+"abstract": { "kind": "abstract", "title": "이 노트에 대하여", "body": "...본문..." }
+```
+
+- 콜아웃 표식(`[!xxx]`)이 없는 평범한 인용은 abstract가 아니다.
+- 첫 헤딩 아래의 콜아웃은 본문이지 노트의 abstract가 아니므로 잡지 않는다.
+- `kind` 는 `abstract` 외의 표식(`note`, `tip` …)도 그대로 싣는다.
 
 ---
 
 ## Testing
 
 ```bash
-./run.sh test       # All 105 tests
+./run.sh test       # All 118 tests
 ./run.sh showcase   # Visual: all search patterns with input→output
 ./run.sh cover      # Coverage report (logic functions: 85-100%)
 ```
@@ -164,7 +205,7 @@ denotecli/
 ├── README.md
 ├── docs/
 │   └── obsidian-cli-comparison.md
-└── denotecli/                # Go source (single package, 15 modules + 16 test files)
+└── denotecli/                # Go source (single package, 15 modules + 17 test files)
     ├── main.go               # CLI routing + flag parsing
     ├── parser.go             # Denote filename (with signature) + frontmatter + link parser
     ├── search.go             # Directory scanner + title/tag search
@@ -180,7 +221,7 @@ denotecli/
     ├── day.go                # Day query (journal + datetree + notes)
     ├── timeline_journal.go   # Monthly journal timeline
     ├── stemmer.go            # Porter stemmer (embedded, no deps)
-    └── *_test.go             # 105 tests (unit + integration + showcase)
+    └── *_test.go             # 118 tests (unit + integration + showcase)
 ```
 
 ---

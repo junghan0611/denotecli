@@ -12,6 +12,8 @@ import (
 // that search commands see header content, not just the filename slug.
 // Bug 4 fix: df.HeaderTitle ← #+title: (richer than filename slug)
 // Bug 1 fix: df.Tags ← union(filename slots, #+filetags:)
+// df.Description ← #+description:, df.Lastmod/df.HugoLastmod ← #+hugo_lastmod:
+// so "which note is stale" is answerable from search/list JSON in one call.
 func ScanDirs(dirs []string) []DenoteFile {
 	var files []DenoteFile
 	for _, dir := range dirs {
@@ -32,6 +34,13 @@ func ScanDirs(dirs []string) []DenoteFile {
 			}
 			if len(fm.Filetags) > 0 {
 				df.Tags = unionTags(df.Tags, fm.Filetags)
+			}
+			df.Description = fm.Description
+			// Carry the modification stamp in both shapes: raw (keeps HH:MM for
+			// time-of-day comparisons) and normalized (date-only, matches day.go).
+			if fm.HugoLastmod != "" {
+				df.HugoLastmod = fm.HugoLastmod
+				df.Lastmod = ExtractDate(fm.HugoLastmod)
 			}
 			files = append(files, df)
 			return nil

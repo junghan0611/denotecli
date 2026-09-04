@@ -133,6 +133,7 @@ func collectNotesModified(files []DenoteFile, dateStr string, skip map[string]bo
 			continue
 		}
 		f.Lastmod = d
+		f.HugoLastmod = fm.HugoLastmod
 		out = append(out, f)
 	}
 	return out
